@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
@@ -36,8 +36,8 @@ router.post('/login', async (req, res) => {
             user: { id: user.id, name: user.name, username: user.username, role: user.role }
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error("Auth Error:", error);
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 });
 
