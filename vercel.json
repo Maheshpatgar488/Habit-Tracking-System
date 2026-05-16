@@ -9,4 +9,5 @@
       "entrypoint": "backend",
       "routePrefix": "/api/*"
     }
+  }
 }
