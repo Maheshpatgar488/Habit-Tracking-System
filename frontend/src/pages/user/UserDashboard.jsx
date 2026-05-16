@@ -43,7 +43,7 @@ const UserDashboard = () => {
                     // This prevents the user from needing to manually re-enable notifications after login
                     const token = localStorage.getItem('token');
                     if (token) {
-                        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                        const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
                         await axios.post(`${API_BASE_URL}/api/user/subscribe`, existingSub, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).catch(() => {}); // Ignore errors if already synced
@@ -58,7 +58,7 @@ const UserDashboard = () => {
     const fetchTimeline = async () => {
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
             const response = await axios.get(`${API_BASE_URL}/api/user/timeline`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -78,7 +78,7 @@ const UserDashboard = () => {
     const markCompleted = async (taskId) => {
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
             await axios.put(`${API_BASE_URL}/api/user/tasks/${taskId}/complete`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -129,7 +129,7 @@ const UserDashboard = () => {
             }
 
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
             await axios.post(`${API_BASE_URL}/api/user/subscribe`, subscription, {
                 headers: { Authorization: `Bearer ${token}` }
             });
