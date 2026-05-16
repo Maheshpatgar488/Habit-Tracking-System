@@ -14,18 +14,21 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
+app.use('/api/cron', require('./routes/cronRoutes'));
 
 // Basic health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-// Start the cron jobs
-require('./cron/midnightGenerator');
-require('./cron/statusUpdater');
-require('./cron/notificationTrigger');
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
+// Only listen if not running in a serverless environment like Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
+// Export for Vercel Serverless
+module.exports = app;

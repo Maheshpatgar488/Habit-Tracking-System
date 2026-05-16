@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/midnight",
+      "schedule": "1 0 * * *"
+    },
+    {
+      "path": "/api/cron/status",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/notify",
+      "schedule": "* * * * *"
+    }
+  ]
+}
