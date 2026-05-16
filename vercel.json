@@ -9,19 +9,4 @@
       "entrypoint": "backend",
       "routePrefix": "/api/*"
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/midnight",
-      "schedule": "1 0 * * *"
-    },
-    {
-      "path": "/api/cron/status",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/notify",
-      "schedule": "* * * * *"
-    }
-  ]
 }
