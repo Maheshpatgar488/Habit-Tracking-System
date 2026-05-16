@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/backend/server.js"
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/*"
     },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
+    "backend": {
+      "entrypoint": "backend",
+      "routePrefix": "/api/*"
     }
-  ],
+  },
   "crons": [
     {
       "path": "/api/cron/midnight",
