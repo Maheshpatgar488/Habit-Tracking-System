@@ -16,7 +16,7 @@ const PrivateRoute = ({ children, role }) => {
 
 const Header = () => {
     const location = useLocation();
-    const isLogin = location.pathname === '/';
+    const hasToken = !!localStorage.getItem('token');
     
     return (
         <header className="sticky top-0 z-50 glass-card mx-4 mt-4 mb-8 px-6 py-4 flex justify-between items-center rounded-2xl">
@@ -28,7 +28,7 @@ const Header = () => {
                     TaskFlow <span className="text-indigo-400 font-light text-xl">Pro</span>
                 </h1>
             </div>
-            {!isLogin && (
+            {hasToken && (
                 <button 
                     onClick={() => { localStorage.clear(); window.location.href = '/'; }}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
@@ -56,9 +56,11 @@ function App() {
                 <Route 
                     path="/admin" 
                     element={
-                        <PrivateRoute role="admin">
+                        localStorage.getItem('token') && localStorage.getItem('role') === 'admin' ? (
                             <AdminDashboard />
-                        </PrivateRoute>
+                        ) : (
+                            <Login defaultRole="admin" />
+                        )
                     } 
                 />
                 <Route 

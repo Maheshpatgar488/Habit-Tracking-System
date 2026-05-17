@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LogIn, UserCircle, ShieldAlert } from 'lucide-react';
 
-const Login = () => {
-    const [role, setRole] = useState('user');
+const Login = ({ defaultRole = 'user' }) => {
+    const [role, setRole] = useState(defaultRole);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setRole(defaultRole);
+    }, [defaultRole]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -56,8 +60,12 @@ const Login = () => {
                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-700" />
 
                 <div className="relative z-10 text-center mb-8">
-                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-2">Welcome Back</h2>
-                    <p className="text-slate-400 text-sm">Sign in to access your automation dashboard</p>
+                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-2">
+                        {role === 'admin' ? 'Admin Portal' : 'Welcome Back'}
+                    </h2>
+                    <p className="text-slate-400 text-sm">
+                        {role === 'admin' ? 'Sign in to manage the automation system' : 'Sign in to access your automation dashboard'}
+                    </p>
                 </div>
 
                 {error && (
@@ -65,23 +73,6 @@ const Login = () => {
                         <ShieldAlert size={16} /> {error}
                     </div>
                 )}
-
-                <div className="relative z-10 flex p-1.5 bg-slate-900/50 rounded-xl mb-8 border border-slate-700/50">
-                    <button 
-                        type="button"
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${role === 'user' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-400 hover:text-slate-200'}`}
-                        onClick={() => setRole('user')}
-                    >
-                        <UserCircle size={18} /> User
-                    </button>
-                    <button 
-                        type="button"
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${role === 'admin' ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25' : 'text-slate-400 hover:text-slate-200'}`}
-                        onClick={() => setRole('admin')}
-                    >
-                        <ShieldAlert size={18} /> Admin
-                    </button>
-                </div>
 
                 <form onSubmit={handleLogin} className="relative z-10 space-y-5">
                     <div className="space-y-1.5">
