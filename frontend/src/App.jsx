@@ -41,6 +41,20 @@ const Header = () => {
     );
 };
 
+const AdminRoute = () => {
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('role');
+
+    if (token) {
+        if (userRole === 'admin') {
+            return <AdminDashboard />;
+        } else {
+            return <Navigate to="/user" />;
+        }
+    }
+    return <Login defaultRole="admin" />;
+};
+
 function App() {
   return (
     <Router>
@@ -53,16 +67,7 @@ function App() {
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 pb-12 relative z-10">
             <Routes>
                 <Route path="/" element={<Login />} />
-                <Route 
-                    path="/admin" 
-                    element={
-                        localStorage.getItem('token') && localStorage.getItem('role') === 'admin' ? (
-                            <AdminDashboard />
-                        ) : (
-                            <Login defaultRole="admin" />
-                        )
-                    } 
-                />
+                <Route path="/admin" element={<AdminRoute />} />
                 <Route 
                     path="/user" 
                     element={
