@@ -10,7 +10,7 @@ router.get('/timeline', async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const [logs] = await pool.query(
-            'SELECT * FROM daily_task_logs WHERE user_id = ? AND date = ? ORDER BY scheduled_time ASC',
+            'SELECT id, user_id, task_name, DATE_FORMAT(scheduled_time, "%Y-%m-%dT%H:%i:%s") as scheduled_time, duration_minutes, status, date FROM daily_task_logs WHERE user_id = ? AND date = ? ORDER BY scheduled_time ASC',
             [req.user.id, today]
         );
         res.json(logs);
