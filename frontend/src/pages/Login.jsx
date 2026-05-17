@@ -42,9 +42,9 @@ const Login = ({ defaultRole = 'user' }) => {
             localStorage.setItem('userName', response.data.user.name);
 
             if (role === 'admin') {
-                navigate('/admin');
+                window.location.href = '/admin';
             } else {
-                navigate('/user');
+                window.location.href = '/user';
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check credentials.');
