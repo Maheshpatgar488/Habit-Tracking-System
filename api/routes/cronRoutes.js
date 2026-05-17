@@ -63,19 +63,59 @@ router.get('/midnight', async (req, res) => {
 
 // 2. Status Updater
 router.get('/status', async (req, res) => {
-    console.log('[VERCEL CRON] Running Status Auto-Updater...');
+    console.log('[VERCEL CRON] Running Status Auto-Updater & Notification Sender...');
     try {
         const now = new Date();
         const localNowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
 
-        const query = `
+        // 1. Find all pending tasks that have expired (scheduled_time + duration < now)
+        // and fetch their users' push subscriptions
+        const selectQuery = `
+            SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
+            FROM daily_task_logs d
+            JOIN push_subscriptions p ON d.user_id = p.user_id
+            WHERE d.status = 'pending' 
+            AND DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE) < ?
+        `;
+        const [expiredTasks] = await pool.query(selectQuery, [localNowStr]);
+
+        let notificationsSent = 0;
+
+        // 2. Send 'Missed Task' push notification
+        if (expiredTasks.length > 0 && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+            for (const task of expiredTasks) {
+                const pushSubscription = {
+                    endpoint: task.endpoint,
+                    keys: { p256dh: task.p256dh, auth: task.auth }
+                };
+
+                const payload = JSON.stringify({
+                    title: 'Task Missed ❌',
+                    body: `Oh no! You missed your scheduled task: '${task.task_name}'. Keep going, you've got this!`,
+                    icon: '/icon.png'
+                });
+
+                try {
+                    await webpush.sendNotification(pushSubscription, payload);
+                    notificationsSent++;
+                } catch (err) {
+                    console.error('[STATUS CRON] Failed to send missed notification:', err.message);
+                }
+            }
+        }
+
+        // 3. Finally, update the tasks status to 'missed' in the database
+        const updateQuery = `
             UPDATE daily_task_logs 
             SET status = 'missed' 
             WHERE status = 'pending' 
             AND DATE_ADD(scheduled_time, INTERVAL duration_minutes MINUTE) < ?
         `;
-        const [result] = await pool.query(query, [localNowStr]);
-        res.status(200).json({ message: `Updated ${result.affectedRows} tasks` });
+        const [result] = await pool.query(updateQuery, [localNowStr]);
+
+        res.status(200).json({ 
+            message: `Updated ${result.affectedRows} tasks to missed. Sent ${notificationsSent} notifications.` 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
