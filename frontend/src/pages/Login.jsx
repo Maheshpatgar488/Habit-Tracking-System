@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LogIn, UserCircle, ShieldAlert } from 'lucide-react';
@@ -10,6 +10,14 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('role');
+        if (token && userRole) {
+            navigate(userRole === 'admin' ? '/admin' : '/user');
+        }
+    }, [navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
