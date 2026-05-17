@@ -54,12 +54,21 @@ router.post('/subscribe', async (req, res) => {
             return res.status(400).json({ message: 'Invalid subscription object' });
         }
 
-        await pool.query(
-            'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)',
-            [req.user.id, endpoint, keys.p256dh, keys.auth]
+        // Check if this endpoint is already subscribed for this user
+        const [existing] = await pool.query(
+            'SELECT id FROM push_subscriptions WHERE user_id = ? AND endpoint = ?',
+            [req.user.id, endpoint]
         );
 
-        res.status(201).json({ message: 'Subscribed to push notifications' });
+        if (existing.length === 0) {
+            await pool.query(
+                'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)',
+                [req.user.id, endpoint, keys.p256dh, keys.auth]
+            );
+            res.status(201).json({ message: 'Subscribed to push notifications' });
+        } else {
+            res.status(200).json({ message: 'Already subscribed to this endpoint' });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
