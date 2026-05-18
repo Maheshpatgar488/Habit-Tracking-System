@@ -8,11 +8,37 @@ router.use(authMiddleware(['user']));
 // Get today's timeline (daily task logs)
 router.get('/timeline', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        const [logs] = await pool.query(
+        const today = req.query.date || new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        // 1. Fetch existing logs for the user on this date
+        let [logs] = await pool.query(
             'SELECT id, user_id, task_name, DATE_FORMAT(scheduled_time, "%Y-%m-%dT%H:%i:%s") as scheduled_time, duration_minutes, status, date FROM daily_task_logs WHERE user_id = ? AND date = ? ORDER BY scheduled_time ASC',
             [req.user.id, today]
         );
+
+        // 2. Self-healing / On-demand generation: If no logs exist yet, generate them from routine templates
+        if (logs.length === 0) {
+            const [templates] = await pool.query('SELECT * FROM routine_templates WHERE user_id = ?', [req.user.id]);
+            
+            if (templates.length > 0) {
+                const values = templates.map(template => {
+                    const scheduledTime = `${today} ${template.start_time}`;
+                    return [template.user_id, template.task_name, scheduledTime, template.duration_minutes, 'pending', today];
+                });
+
+                await pool.query(
+                    'INSERT INTO daily_task_logs (user_id, task_name, scheduled_time, duration_minutes, status, date) VALUES ?',
+                    [values]
+                );
+
+                // Re-fetch the newly generated logs
+                [logs] = await pool.query(
+                    'SELECT id, user_id, task_name, DATE_FORMAT(scheduled_time, "%Y-%m-%dT%H:%i:%s") as scheduled_time, duration_minutes, status, date FROM daily_task_logs WHERE user_id = ? AND date = ? ORDER BY scheduled_time ASC',
+                    [req.user.id, today]
+                );
+            }
+        }
+
         res.json(logs);
     } catch (error) {
         console.error(error);

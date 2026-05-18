@@ -108,6 +108,20 @@ router.delete('/routines/:id', async (req, res) => {
 router.get('/tasks', async (req, res) => {
     try {
         const filter = req.query.filter || 'today';
+        const clientDate = req.query.date; // YYYY-MM-DD
+        
+        let today, yesterday;
+        if (clientDate) {
+            today = clientDate;
+            const yDate = new Date(clientDate + 'T00:00:00'); // Use ISO format to parse local date correctly
+            yDate.setDate(yDate.getDate() - 1);
+            yesterday = yDate.toISOString().split('T')[0];
+        } else {
+            today = new Date().toISOString().split('T')[0];
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            yesterday = yesterdayDate.toISOString().split('T')[0];
+        }
         
         let query = `
             SELECT d.id, d.task_name, DATE_FORMAT(d.scheduled_time, '%Y-%m-%dT%H:%i:%s') as scheduled_time, d.duration_minutes, d.status, u.name as user_name, d.date 
@@ -117,13 +131,9 @@ router.get('/tasks', async (req, res) => {
         let queryParams = [];
 
         if (filter === 'today') {
-            const today = new Date().toISOString().split('T')[0];
             query += ' WHERE d.date = ?';
             queryParams.push(today);
         } else if (filter === 'yesterday') {
-            const yesterdayDate = new Date();
-            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-            const yesterday = yesterdayDate.toISOString().split('T')[0];
             query += ' WHERE d.date = ?';
             queryParams.push(yesterday);
         }

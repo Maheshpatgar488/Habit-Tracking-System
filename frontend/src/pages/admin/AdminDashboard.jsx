@@ -31,9 +31,16 @@ const AdminDashboard = () => {
             const headers = { Authorization: `Bearer ${token}` };
             
             const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            
+            // Get local date in YYYY-MM-DD format, adjusting for timezone offset
+            const localDate = new Date();
+            const offset = localDate.getTimezoneOffset();
+            const localNow = new Date(localDate.getTime() - (offset * 60 * 1000));
+            const todayStr = localNow.toISOString().split('T')[0];
+
             const [usersRes, tasksRes] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/admin/users`, { headers }),
-                axios.get(`${API_BASE_URL}/api/admin/tasks?filter=${dateFilter}`, { headers })
+                axios.get(`${API_BASE_URL}/api/admin/tasks?filter=${dateFilter}&date=${todayStr}`, { headers })
             ]);
             
             setUsers(usersRes.data);

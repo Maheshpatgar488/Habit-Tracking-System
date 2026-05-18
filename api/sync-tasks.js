@@ -1,15 +1,7 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const pool = require('./config/db');
 
 async function forceGenerateTasks() {
     try {
-        const pool = mysql.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-        });
-
         const today = new Date().toISOString().split('T')[0];
         
         console.log(`Checking routines for ${today}...`);

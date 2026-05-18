@@ -59,7 +59,14 @@ const UserDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
-            const response = await axios.get(`${API_BASE_URL}/api/user/timeline`, {
+            
+            // Get local date in YYYY-MM-DD format, adjusting for timezone offset
+            const localDate = new Date();
+            const offset = localDate.getTimezoneOffset();
+            const localNow = new Date(localDate.getTime() - (offset * 60 * 1000));
+            const todayStr = localNow.toISOString().split('T')[0];
+
+            const response = await axios.get(`${API_BASE_URL}/api/user/timeline?date=${todayStr}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTimeline(response.data);
