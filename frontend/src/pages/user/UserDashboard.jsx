@@ -44,7 +44,15 @@ const UserDashboard = () => {
                     const token = localStorage.getItem('token');
                     if (token) {
                         const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
-                        await axios.post(`${API_BASE_URL}/api/user/subscribe`, existingSub, {
+                        const subscriptionData = {
+                            endpoint: existingSub.endpoint,
+                            keys: {
+                                p256dh: existingSub.toJSON().keys?.p256dh,
+                                auth: existingSub.toJSON().keys?.auth
+                            },
+                            timezoneOffset: new Date().getTimezoneOffset()
+                        };
+                        await axios.post(`${API_BASE_URL}/api/user/subscribe`, subscriptionData, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).catch(() => {}); // Ignore errors if already synced
                     }
@@ -137,7 +145,15 @@ const UserDashboard = () => {
 
             const token = localStorage.getItem('token');
             const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
-            await axios.post(`${API_BASE_URL}/api/user/subscribe`, subscription, {
+            const subscriptionData = {
+                endpoint: subscription.endpoint,
+                keys: {
+                    p256dh: subscription.toJSON().keys?.p256dh,
+                    auth: subscription.toJSON().keys?.auth
+                },
+                timezoneOffset: new Date().getTimezoneOffset()
+            };
+            await axios.post(`${API_BASE_URL}/api/user/subscribe`, subscriptionData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

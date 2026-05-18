@@ -5,20 +5,22 @@ const pool = require('../config/db');
 cron.schedule('* * * * *', async () => {
     console.log('[CRON] Running Status Auto-Updater...');
     try {
-        const now = new Date();
-        // MySQL expects 'YYYY-MM-DD HH:MM:SS'
-        const localNowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
-
         // Find all pending tasks where (scheduled_time + duration_minutes) has passed
-        // Meaning the task window is over, but it's still marked 'pending'
+        // Meaning the task window is over, but it's still marked 'pending' (timezone-corrected)
         const query = `
-            UPDATE daily_task_logs 
-            SET status = 'missed' 
-            WHERE status = 'pending' 
-            AND DATE_ADD(scheduled_time, INTERVAL duration_minutes MINUTE) < ?
+            UPDATE daily_task_logs d
+            SET d.status = 'missed' 
+            WHERE d.status = 'pending' 
+            AND DATE_ADD(
+                DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE), 
+                INTERVAL COALESCE(
+                    (SELECT MIN(timezone_offset) FROM push_subscriptions WHERE user_id = d.user_id), 
+                    -330
+                ) MINUTE
+            ) < NOW()
         `;
 
-        const [result] = await pool.query(query, [localNowStr]);
+        const [result] = await pool.query(query);
         if (result.affectedRows > 0) {
             console.log(`[CRON] Updated ${result.affectedRows} tasks to 'missed'.`);
         }

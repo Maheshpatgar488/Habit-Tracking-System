@@ -73,12 +73,14 @@ router.put('/tasks/:id/complete', async (req, res) => {
 // Subscribe to push notifications
 router.post('/subscribe', async (req, res) => {
     try {
-        const subscription = req.body;
-        const { endpoint, keys } = subscription;
+        const { endpoint, keys, timezoneOffset } = req.body;
         
         if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
             return res.status(400).json({ message: 'Invalid subscription object' });
         }
+
+        // Get timezoneOffset, default to -330 (IST) if not provided
+        const tzOffset = timezoneOffset !== undefined ? parseInt(timezoneOffset) : -330;
 
         // Check if this endpoint is already subscribed for this user
         const [existing] = await pool.query(
@@ -88,12 +90,16 @@ router.post('/subscribe', async (req, res) => {
 
         if (existing.length === 0) {
             await pool.query(
-                'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)',
-                [req.user.id, endpoint, keys.p256dh, keys.auth]
+                'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, timezone_offset) VALUES (?, ?, ?, ?, ?)',
+                [req.user.id, endpoint, keys.p256dh, keys.auth, tzOffset]
             );
             res.status(201).json({ message: 'Subscribed to push notifications' });
         } else {
-            res.status(200).json({ message: 'Already subscribed to this endpoint' });
+            await pool.query(
+                'UPDATE push_subscriptions SET timezone_offset = ? WHERE user_id = ? AND endpoint = ?',
+                [tzOffset, req.user.id, endpoint]
+            );
+            res.status(200).json({ message: 'Already subscribed to this endpoint, updated timezone offset' });
         }
     } catch (error) {
         console.error(error);

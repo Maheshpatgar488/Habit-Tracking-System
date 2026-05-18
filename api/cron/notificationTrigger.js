@@ -18,28 +18,16 @@ cron.schedule('* * * * *', async () => {
     }
 
     try {
-        const now = new Date();
-        // Calculate the time 5 minutes from now
-        const futureTime = new Date(now.getTime() + 5 * 60000);
-        
-        // Convert to local MySQL format string 'YYYY-MM-DD HH:MM'
-        // We only care about matching the minute
-        const localFutureStr = new Date(futureTime.getTime() - futureTime.getTimezoneOffset() * 60000)
-            .toISOString().slice(0, 16); 
-            // example: "2023-10-27T10:05" -> "2023-10-27 10:05"
-            // Wait, we need to match the date and hour:minute exactly.
-
-        // Get tasks that are exactly 5 minutes away
+        // Get tasks that are exactly 5 minutes away (using timezone-independent DB calculations)
         const query = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = ?
+            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
         `;
 
-        const searchTimeStr = localFutureStr.replace('T', ' ');
-        const [tasks] = await pool.query(query, [searchTimeStr]);
+        const [tasks] = await pool.query(query);
 
         if (tasks.length > 0) {
             console.log(`[CRON] Found ${tasks.length} tasks starting in 5 minutes. Sending notifications...`);

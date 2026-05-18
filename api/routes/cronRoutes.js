@@ -65,19 +65,16 @@ router.get('/midnight', async (req, res) => {
 router.get('/status', async (req, res) => {
     console.log('[VERCEL CRON] Running Status Auto-Updater & Notification Sender...');
     try {
-        const now = new Date();
-        const localNowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
-
-        // 1. Find all pending tasks that have expired (scheduled_time + duration < now)
+        // 1. Find all pending tasks that have expired (scheduled_time + duration < now in UTC)
         // and fetch their users' push subscriptions
         const selectQuery = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE) < ?
+            AND DATE_ADD(DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE), INTERVAL COALESCE(p.timezone_offset, -330) MINUTE) < NOW()
         `;
-        const [expiredTasks] = await pool.query(selectQuery, [localNowStr]);
+        const [expiredTasks] = await pool.query(selectQuery);
 
         let notificationsSent = 0;
 
@@ -104,14 +101,20 @@ router.get('/status', async (req, res) => {
             }
         }
 
-        // 3. Finally, update the tasks status to 'missed' in the database
+        // 3. Finally, update the tasks status to 'missed' in the database (with fallback to default -330 if user has no subscriptions)
         const updateQuery = `
-            UPDATE daily_task_logs 
-            SET status = 'missed' 
-            WHERE status = 'pending' 
-            AND DATE_ADD(scheduled_time, INTERVAL duration_minutes MINUTE) < ?
+            UPDATE daily_task_logs d
+            SET d.status = 'missed' 
+            WHERE d.status = 'pending' 
+            AND DATE_ADD(
+                DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE), 
+                INTERVAL COALESCE(
+                    (SELECT MIN(timezone_offset) FROM push_subscriptions WHERE user_id = d.user_id), 
+                    -330
+                ) MINUTE
+            ) < NOW()
         `;
-        const [result] = await pool.query(updateQuery, [localNowStr]);
+        const [result] = await pool.query(updateQuery);
 
         res.status(200).json({ 
             message: `Updated ${result.affectedRows} tasks to missed. Sent ${notificationsSent} notifications.` 
@@ -130,21 +133,15 @@ router.get('/notify', async (req, res) => {
     }
 
     try {
-        const now = new Date();
-        const futureTime = new Date(now.getTime() + 5 * 60000);
-        const localFutureStr = new Date(futureTime.getTime() - futureTime.getTimezoneOffset() * 60000)
-            .toISOString().slice(0, 16); 
-            
         const query = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = ?
+            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
         `;
 
-        const searchTimeStr = localFutureStr.replace('T', ' ');
-        const [tasks] = await pool.query(query, [searchTimeStr]);
+        const [tasks] = await pool.query(query);
 
         let sentCount = 0;
         if (tasks.length > 0) {
