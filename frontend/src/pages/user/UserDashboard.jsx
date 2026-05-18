@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CheckCircle, Clock, XCircle, Bell, Loader, Activity, Zap } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Bell, Loader, Activity, Zap, Lock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const publicVapidKey = 'BG-mulIt1eT9GfRLGI4GsyMgvJ9vwOk-N3w95EyxHxpVNJ7smMtC8cTEWTYcr2W3vztatc5yV1D-ccUPY9v8oDo'; // This will need to be replaced with the actual key
@@ -175,7 +175,8 @@ const UserDashboard = () => {
         }
     };
 
-    const getStatusIcon = (status) => {
+    const getStatusIcon = (status, isUpcoming) => {
+        if (status === 'pending' && isUpcoming) return <Lock size={20} />;
         switch(status) {
             case 'completed': return <CheckCircle size={20} />;
             case 'missed': return <XCircle size={20} />;
@@ -190,8 +191,12 @@ const UserDashboard = () => {
     const totalTasks = timeline.length;
     const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
-    // Advanced UI Data
-    const nextTask = timeline.find(t => t.status === 'pending');
+    // Advanced UI Data (find the next pending task that has not expired yet)
+    const nextTask = timeline.find(t => {
+        if (t.status !== 'pending') return false;
+        const endTime = new Date(new Date(t.scheduled_time).getTime() + t.duration_minutes * 60000);
+        return new Date() < endTime;
+    });
     
     const chartData = timeline.map(task => {
         const scheduledTime = new Date(task.scheduled_time);
@@ -322,48 +327,90 @@ const UserDashboard = () => {
             {timeline.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {timeline.map((task) => {
+                        const now = new Date();
                         const scheduledTime = new Date(task.scheduled_time);
                         const timeString = scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         
-                        const isPending = task.status === 'pending';
-                        const isCompleted = task.status === 'completed';
-                        const isMissed = task.status === 'missed';
+                        const endTime = new Date(scheduledTime.getTime() + task.duration_minutes * 60000);
+                        const endTimeString = endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        const isUpcoming = now < scheduledTime;
+                        const isExpired = now > endTime;
+                        
+                        // Determine visual status state
+                        const visualStatus = task.status === 'pending' && isExpired ? 'missed' : task.status;
+                        
+                        const isPending = visualStatus === 'pending';
+                        const isCompleted = visualStatus === 'completed';
+                        const isMissed = visualStatus === 'missed';
+                        
+                        // Card gradients based on state
+                        const cardBgClass = isPending 
+                            ? (isUpcoming 
+                                ? 'bg-gradient-to-br from-slate-700/20 via-slate-800/10 to-transparent hover:shadow-[0_15px_30px_rgba(30,41,59,0.2)]'
+                                : 'bg-gradient-to-br from-indigo-500/40 via-purple-500/10 to-transparent hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)]')
+                            : (isCompleted ? 'bg-emerald-500/20 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)]' : 'bg-red-500/20 hover:shadow-[0_15px_30px_rgba(239,68,68,0.15)]');
+                            
+                        const cardBorderClass = isPending 
+                            ? (isUpcoming ? 'bg-slate-900/90 border-slate-700/30' : 'bg-slate-900/90 border-indigo-500/25')
+                            : (isCompleted ? 'bg-emerald-950/40 border-emerald-500/20' : 'bg-red-950/40 border-red-500/20');
+                            
+                        const iconContainerClass = isPending 
+                            ? (isUpcoming ? 'bg-slate-800 text-slate-500 border border-slate-700/40' : 'bg-indigo-500/10 text-indigo-400')
+                            : (isCompleted ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400');
+                            
+                        const badgeClass = isPending 
+                            ? (isUpcoming ? 'bg-slate-800/80 text-slate-400 border border-slate-700/50' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 animate-pulse')
+                            : (isCompleted ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30');
 
                         return (
-                            <div key={task.id} className={`relative overflow-hidden rounded-3xl p-1 transition-all duration-500 hover:-translate-y-2 group ${isPending ? 'bg-gradient-to-br from-indigo-500/40 via-purple-500/10 to-transparent hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)]' : (isCompleted ? 'bg-emerald-500/20' : 'bg-red-500/20')}`}>
-                                <div className={`h-full w-full rounded-[22px] p-6 backdrop-blur-2xl flex flex-col justify-between border ${isPending ? 'bg-slate-900/90 border-indigo-500/20' : (isCompleted ? 'bg-emerald-950/40 border-emerald-500/20' : 'bg-red-950/40 border-red-500/20')}`}>
+                            <div key={task.id} className={`relative overflow-hidden rounded-3xl p-1 transition-all duration-500 hover:-translate-y-2 group ${cardBgClass}`}>
+                                <div className={`h-full w-full rounded-[22px] p-6 backdrop-blur-2xl flex flex-col justify-between border ${cardBorderClass}`}>
                                     
                                     {/* Card Header */}
                                     <div className="flex justify-between items-start mb-6">
-                                        <div className={`p-3 rounded-2xl ${isPending ? 'bg-indigo-500/10 text-indigo-400' : (isCompleted ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400')}`}>
-                                            {getStatusIcon(task.status)}
+                                        <div className={`p-3 rounded-2xl ${iconContainerClass}`}>
+                                            {getStatusIcon(visualStatus, isUpcoming)}
                                         </div>
-                                        <div className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${isPending ? 'bg-slate-800 text-slate-300 border-slate-700' : (isCompleted ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30')}`}>
-                                            {task.status}
+                                        <div className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${badgeClass}`}>
+                                            {isPending && isUpcoming ? 'upcoming' : visualStatus}
                                         </div>
                                     </div>
 
                                     {/* Content */}
                                     <div className="mb-8">
                                         <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{task.task_name}</h3>
-                                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                                            <Clock size={16} className="text-indigo-400" /> {timeString} 
-                                            <span className="w-1 h-1 rounded-full bg-slate-600 mx-1"></span> 
-                                            {task.duration_minutes} min
+                                        <div className="flex flex-col gap-1.5 text-slate-400 text-sm font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <Clock size={16} className={isPending && !isUpcoming ? 'text-indigo-400 animate-pulse' : 'text-slate-400'} />
+                                                <span>{timeString} - {endTimeString}</span>
+                                            </div>
+                                            <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">
+                                                Duration: {task.duration_minutes} min
+                                            </span>
                                         </div>
                                     </div>
 
                                     {/* Action Button */}
                                     {isPending ? (
-                                        <button 
-                                            onClick={() => markCompleted(task.id)}
-                                            className="w-full relative overflow-hidden group/btn bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_0_15px_rgba(99,102,241,0.4)]"
-                                        >
-                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-in-out" />
-                                            <span className="relative z-10 flex items-center gap-2"><CheckCircle size={20} /> Mark as Done</span>
-                                        </button>
+                                        isUpcoming ? (
+                                            <button 
+                                                disabled
+                                                className="w-full bg-slate-800/35 text-slate-500 font-bold py-4 rounded-xl flex items-center justify-center gap-2 border border-slate-700/20 cursor-not-allowed backdrop-blur-sm"
+                                            >
+                                                <Lock size={18} className="text-slate-600" /> Locked until {timeString}
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => markCompleted(task.id)}
+                                                className="w-full relative overflow-hidden group/btn bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.45)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-[1.02]"
+                                            >
+                                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-in-out" />
+                                                <span className="relative z-10 flex items-center gap-2"><CheckCircle size={20} /> Mark as Done</span>
+                                            </button>
+                                        )
                                     ) : (
-                                        <div className={`w-full py-4 rounded-xl font-bold text-center border ${isCompleted ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}>
+                                        <div className={`w-full py-4 rounded-xl font-bold text-center border backdrop-blur-md ${isCompleted ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}>
                                             {isCompleted ? 'Task Completed 🎉' : 'Task Missed ❌'}
                                         </div>
                                     )}

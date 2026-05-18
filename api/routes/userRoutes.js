@@ -51,8 +51,11 @@ router.put('/tasks/:id/complete', async (req, res) => {
     try {
         const taskId = req.params.id;
         
-        // Ensure the task belongs to the user
-        const [task] = await pool.query('SELECT * FROM daily_task_logs WHERE id = ? AND user_id = ?', [taskId, req.user.id]);
+        // Ensure the task belongs to the user (fetch with timezone-agnostic string format)
+        const [task] = await pool.query(
+            "SELECT *, DATE_FORMAT(scheduled_time, '%Y-%m-%d %H:%i:%s') as scheduled_time_str FROM daily_task_logs WHERE id = ? AND user_id = ?",
+            [taskId, req.user.id]
+        );
         
         if (task.length === 0) {
             return res.status(404).json({ message: 'Task not found' });
@@ -60,6 +63,30 @@ router.put('/tasks/:id/complete', async (req, res) => {
 
         if (task[0].status !== 'pending') {
             return res.status(400).json({ message: `Task is already ${task[0].status}` });
+        }
+
+        // Get the user's registered timezone offset from push_subscriptions
+        const [[sub]] = await pool.query(
+            "SELECT MIN(timezone_offset) as tz FROM push_subscriptions WHERE user_id = ?",
+            [req.user.id]
+        );
+        const tzOffset = sub && sub.tz !== null ? parseInt(sub.tz) : -330;
+
+        // Current user time (timezone adjusted representation)
+        const now = new Date();
+        const userLocalNow = new Date(now.getTime() - tzOffset * 60000);
+
+        const startTime = new Date(task[0].scheduled_time_str + 'Z');
+        const endTime = new Date(startTime.getTime() + task[0].duration_minutes * 60000);
+
+        if (userLocalNow < startTime) {
+            return res.status(400).json({ message: 'Task has not started yet. You cannot mark it as completed early!' });
+        }
+
+        if (userLocalNow > endTime) {
+            // Auto-update to missed since the duration window has expired
+            await pool.query('UPDATE daily_task_logs SET status = "missed" WHERE id = ?', [taskId]);
+            return res.status(400).json({ message: 'Task window has closed. The task has been marked as missed!' });
         }
 
         await pool.query('UPDATE daily_task_logs SET status = "completed" WHERE id = ?', [taskId]);
