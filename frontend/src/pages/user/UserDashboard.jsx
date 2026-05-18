@@ -88,6 +88,14 @@ const UserDashboard = () => {
     useEffect(() => {
         fetchTimeline();
         checkSubscription();
+
+        // Auto-poll the server for timeline updates every 30 seconds
+        // This ensures task locks lift and active states update in real-time without refreshing
+        const interval = setInterval(() => {
+            fetchTimeline();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const markCompleted = async (taskId) => {
