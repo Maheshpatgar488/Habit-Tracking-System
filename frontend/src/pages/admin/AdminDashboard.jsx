@@ -257,7 +257,7 @@ const AdminDashboard = () => {
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-2 custom-scrollbar max-h-[420px]">
+                        <div className={`grid grid-cols-1 ${userPerformanceList.length === 1 ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-6 overflow-y-auto pr-2 custom-scrollbar max-h-[420px]`}>
                             {userPerformanceList.length > 0 ? (
                                 userPerformanceList.map((user, index) => {
                                     const userCompletionPercent = user.total === 0 ? 0 : Math.round((user.completed / user.total) * 100);
@@ -343,6 +343,19 @@ const AdminDashboard = () => {
                                 </div>
                             )}
                         </div>
+
+                        {/* Leaderboard Insight Banner for single user systems */}
+                        {userPerformanceList.length === 1 && (
+                            <div className="mt-6 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-start gap-3">
+                                <span className="text-lg">💡</span>
+                                <div>
+                                    <p className="text-xs font-bold text-indigo-300">Leaderboard Insight</p>
+                                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                                        You currently have 1 active tracking user. When you register more users (like team members, friends, or family) using the <strong className="text-white">Create New User</strong> panel below, their real-time performance scores, tier levels, and task completion cards will automatically populate this grid side-by-side!
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
