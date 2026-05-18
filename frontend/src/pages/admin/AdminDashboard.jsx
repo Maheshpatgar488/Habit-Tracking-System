@@ -242,45 +242,107 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* User Performance List */}
-                <div className="glass-card p-8 lg:col-span-2">
-                    <div className="flex items-center gap-3 mb-8 border-b border-slate-700/50 pb-4">
-                        <div className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700"><Users size={20} /></div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white tracking-wide">User Performance</h2>
-                            <p className="text-xs text-slate-400">Detailed completion metrics by user</p>
+                <div className="glass-card p-8 lg:col-span-2 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-8 border-b border-slate-700/50 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700"><Users size={20} /></div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white tracking-wide">User Performance Leaderboard</h2>
+                                    <p className="text-xs text-slate-400 font-medium">Real-time habit completion scores and ranks</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Live Performance
+                            </span>
                         </div>
-                    </div>
 
-                    <div className="space-y-6 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                        {userPerformanceList.length > 0 ? (
-                            userPerformanceList.map((user, index) => {
-                                const userCompletionPercent = user.total === 0 ? 0 : Math.round((user.completed / user.total) * 100);
-                                
-                                return (
-                                    <div key={index} className="bg-slate-900/50 border border-slate-800 p-4 rounded-xl hover:bg-slate-800/50 transition-colors">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <h3 className="font-bold text-white text-lg">{user.name}</h3>
-                                            <span className={`text-sm font-bold px-3 py-1 rounded-full ${userCompletionPercent >= 80 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : (userCompletionPercent >= 50 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30')}`}>
-                                                {userCompletionPercent}% Score
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="w-full h-2 rounded-full bg-slate-800 mb-3 overflow-hidden border border-slate-700 shadow-inner">
-                                            <div style={{ width: `${userCompletionPercent}%` }} className={`h-full transition-all duration-1000 ${userCompletionPercent >= 80 ? 'bg-emerald-500' : (userCompletionPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500')}`}></div>
-                                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-2 custom-scrollbar max-h-[420px]">
+                            {userPerformanceList.length > 0 ? (
+                                userPerformanceList.map((user, index) => {
+                                    const userCompletionPercent = user.total === 0 ? 0 : Math.round((user.completed / user.total) * 100);
+                                    
+                                    // Tiering system
+                                    let tierLabel = "Improver";
+                                    let tierColor = "from-red-500/20 to-orange-500/20 text-red-400 border-red-500/30";
+                                    let trophy = "🥉";
+                                    let glowColor = "hover:shadow-red-500/5";
+                                    
+                                    if (userCompletionPercent >= 90) {
+                                        tierLabel = "Elite Member";
+                                        tierColor = "from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/30";
+                                        trophy = "🥇";
+                                        glowColor = "hover:shadow-amber-500/5";
+                                    } else if (userCompletionPercent >= 75) {
+                                        tierLabel = "Habit Pro";
+                                        tierColor = "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30";
+                                        trophy = "🥈";
+                                        glowColor = "hover:shadow-emerald-500/5";
+                                    } else if (userCompletionPercent >= 50) {
+                                        tierLabel = "Consistent";
+                                        tierColor = "from-blue-500/20 to-indigo-500/20 text-blue-400 border-blue-500/30";
+                                        trophy = "✨";
+                                        glowColor = "hover:shadow-blue-500/5";
+                                    }
 
-                                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mt-4">
-                                            <div className="text-slate-400 bg-slate-800/50 px-2 py-1 rounded"><span className="text-white font-bold">{user.total}</span> Total</div>
-                                            <div className="text-slate-400 bg-slate-800/50 px-2 py-1 rounded"><span className="text-emerald-400 font-bold">{user.completed}</span> Done</div>
-                                            <div className="text-slate-400 bg-slate-800/50 px-2 py-1 rounded"><span className="text-indigo-400 font-bold">{user.pending}</span> Pending</div>
-                                            <div className="text-slate-400 bg-slate-800/50 px-2 py-1 rounded"><span className="text-red-400 font-bold">{user.missed}</span> Missed</div>
+                                    return (
+                                        <div key={index} className={`group bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl hover:bg-slate-800/40 hover:border-slate-700/80 transition-all duration-300 shadow-md ${glowColor} hover:shadow-xl relative overflow-hidden flex flex-col justify-between`}>
+                                            {/* Glow Background Gradient */}
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-full blur-xl group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-all duration-300" />
+                                            
+                                            <div>
+                                                <div className="flex justify-between items-start gap-2 mb-4 relative z-10">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black shadow-md shadow-indigo-600/10 group-hover:scale-105 transition-transform duration-300">
+                                                            {user.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-extrabold text-white text-base tracking-wide truncate max-w-[120px]">{user.name}</h3>
+                                                            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">{tierLabel}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`text-xs font-black px-2.5 py-1 rounded-lg bg-gradient-to-r border ${tierColor} flex items-center gap-1`}>
+                                                        <span>{trophy}</span>
+                                                        <span>{userCompletionPercent}%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1 mb-4 relative z-10">
+                                                    <div className="flex justify-between text-xs text-slate-400 font-semibold mb-1">
+                                                        <span>Progress</span>
+                                                        <span>{user.completed}/{user.total} Tasks</span>
+                                                    </div>
+                                                    <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden p-0.5 border border-slate-800/60 shadow-inner">
+                                                        <div style={{ width: `${userCompletionPercent}%` }} className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r ${userCompletionPercent >= 80 ? 'from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : (userCompletionPercent >= 50 ? 'from-yellow-500 to-amber-400 shadow-[0_0_10px_rgba(234,179,8,0.3)]' : 'from-red-500 to-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.3)]')}`}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-2 text-[10px] font-bold text-center mt-2 relative z-10">
+                                                <div className="bg-slate-950/60 border border-slate-800/50 px-2 py-2 rounded-xl text-emerald-400 shadow-sm">
+                                                    <div className="text-white text-xs font-extrabold">{user.completed}</div>
+                                                    Done
+                                                </div>
+                                                <div className="bg-slate-950/60 border border-slate-800/50 px-2 py-2 rounded-xl text-indigo-400 shadow-sm">
+                                                    <div className="text-white text-xs font-extrabold">{user.pending}</div>
+                                                    Pending
+                                                </div>
+                                                <div className="bg-slate-950/60 border border-slate-800/50 px-2 py-2 rounded-xl text-red-400 shadow-sm">
+                                                    <div className="text-white text-xs font-extrabold">{user.missed}</div>
+                                                    Missed
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <div className="text-center py-10 text-slate-500 italic">No user data available.</div>
-                        )}
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center py-14 text-slate-500 border border-dashed border-slate-800 rounded-2xl col-span-2">
+                                    <Activity className="mx-auto text-slate-600 mb-3" size={32} />
+                                    <p className="font-semibold text-sm">No active user performance logs yet today.</p>
+                                    <p className="text-xs text-slate-600 mt-1">Pending logs will register once users check-in.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
