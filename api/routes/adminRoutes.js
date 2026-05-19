@@ -104,27 +104,24 @@ router.delete('/routines/:id', async (req, res) => {
     }
 });
 
-// Get daily task logs with date filtering (today, yesterday, all)
+// Get daily task logs with date filtering (today, yesterday, last7, last30, custom, all)
 router.get('/tasks', async (req, res) => {
     try {
         const filter = req.query.filter || 'today';
-        const clientDate = req.query.date; // YYYY-MM-DD
-        
-        let today, yesterday;
-        if (clientDate) {
-            today = clientDate;
-            const yDate = new Date(clientDate + 'T00:00:00'); // Use ISO format to parse local date correctly
-            yDate.setDate(yDate.getDate() - 1);
-            yesterday = yDate.toISOString().split('T')[0];
-        } else {
-            today = new Date().toISOString().split('T')[0];
-            const yesterdayDate = new Date();
-            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-            yesterday = yesterdayDate.toISOString().split('T')[0];
-        }
-        
+        const clientDate = req.query.date; // YYYY-MM-DD (used as "today" anchor or custom date)
+
+        const today = clientDate || new Date().toISOString().split('T')[0];
+        const baseDate = new Date(today + 'T00:00:00');
+
+        const getOffset = (days) => {
+            const d = new Date(baseDate);
+            d.setDate(d.getDate() - days);
+            return d.toISOString().split('T')[0];
+        };
+
         let query = `
-            SELECT d.id, d.task_name, DATE_FORMAT(d.scheduled_time, '%Y-%m-%dT%H:%i:%s') as scheduled_time, d.duration_minutes, d.status, u.name as user_name, d.date 
+            SELECT d.id, d.task_name, DATE_FORMAT(d.scheduled_time, '%Y-%m-%dT%H:%i:%s') as scheduled_time, 
+                   d.duration_minutes, d.status, u.name as user_name, d.date 
             FROM daily_task_logs d
             JOIN users u ON d.user_id = u.id
         `;
@@ -135,12 +132,21 @@ router.get('/tasks', async (req, res) => {
             queryParams.push(today);
         } else if (filter === 'yesterday') {
             query += ' WHERE d.date = ?';
-            queryParams.push(yesterday);
+            queryParams.push(getOffset(1));
+        } else if (filter === 'last7') {
+            query += ' WHERE d.date BETWEEN ? AND ?';
+            queryParams.push(getOffset(6), today);
+        } else if (filter === 'last30') {
+            query += ' WHERE d.date BETWEEN ? AND ?';
+            queryParams.push(getOffset(29), today);
+        } else if (filter === 'custom' && clientDate) {
+            query += ' WHERE d.date = ?';
+            queryParams.push(clientDate);
         }
-        // If filter is 'all', we don't append a WHERE clause for date.
+        // filter === 'all' → no WHERE clause → returns everything
 
-        query += ' ORDER BY d.scheduled_time ASC';
-        
+        query += ' ORDER BY d.date DESC, d.scheduled_time ASC';
+
         const [tasks] = await pool.query(query, queryParams);
         res.json(tasks);
     } catch (error) {

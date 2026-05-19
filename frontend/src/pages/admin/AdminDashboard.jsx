@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { UserPlus, CalendarPlus, Users, Loader, ListTodo, CheckCircle, Clock, XCircle, Activity, BarChart2, PieChart as PieChartIcon, TrendingUp, X, Trash2 } from 'lucide-react';
+import { UserPlus, CalendarPlus, Users, Loader, ListTodo, CheckCircle, Clock, XCircle, Activity, BarChart2, PieChart as PieChartIcon, TrendingUp, X, Trash2, Calendar, ChevronDown } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -8,6 +8,7 @@ const AdminDashboard = () => {
     const [routines, setRoutines] = useState([]);
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState('today');
+    const [customDate, setCustomDate] = useState(''); // for custom date picker
     
     // Manage Routine State
     const [manageRoutines, setManageRoutines] = useState([]);
@@ -29,20 +30,22 @@ const AdminDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            
             const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
-            
-            // Get local date in YYYY-MM-DD format, adjusting for timezone offset
+
+            // Compute local date string (IST-aware)
             const localDate = new Date();
             const offset = localDate.getTimezoneOffset();
             const localNow = new Date(localDate.getTime() - (offset * 60 * 1000));
             const todayStr = localNow.toISOString().split('T')[0];
 
+            // For custom filter use the picked date; for all others use today as anchor
+            const dateParam = dateFilter === 'custom' ? customDate : todayStr;
+
             const [usersRes, tasksRes] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/admin/users`, { headers }),
-                axios.get(`${API_BASE_URL}/api/admin/tasks?filter=${dateFilter}&date=${todayStr}`, { headers })
+                axios.get(`${API_BASE_URL}/api/admin/tasks?filter=${dateFilter}&date=${dateParam}`, { headers })
             ]);
-            
+
             setUsers(usersRes.data);
             setTasks(tasksRes.data);
             setLoading(false);
@@ -50,7 +53,7 @@ const AdminDashboard = () => {
             console.error('Failed to fetch admin data', error);
             setLoading(false);
         }
-    }, [dateFilter]);
+    }, [dateFilter, customDate]);
 
     useEffect(() => {
         fetchData();
@@ -211,10 +214,40 @@ const AdminDashboard = () => {
                                 <p className="text-xs text-slate-400">System-wide breakdown</p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700 w-full md:w-auto">
-                            <button onClick={() => setDateFilter('today')} className={`flex-1 text-xs px-3 py-1.5 rounded-md font-semibold transition-all ${dateFilter === 'today' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}>Today</button>
-                            <button onClick={() => setDateFilter('yesterday')} className={`flex-1 text-xs px-3 py-1.5 rounded-md font-semibold transition-all ${dateFilter === 'yesterday' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}>Yesterday</button>
-                            <button onClick={() => setDateFilter('all')} className={`flex-1 text-xs px-3 py-1.5 rounded-md font-semibold transition-all ${dateFilter === 'all' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}>All Time</button>
+                        {/* Full Date Filter Bar */}
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            <div className="flex flex-wrap gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700">
+                                {[
+                                    { key: 'today', label: 'Today' },
+                                    { key: 'yesterday', label: 'Yesterday' },
+                                    { key: 'last7', label: 'Last 7 Days' },
+                                    { key: 'last30', label: 'Last 30 Days' },
+                                    { key: 'all', label: 'All Time' },
+                                    { key: 'custom', label: '📅 Pick Date' },
+                                ].map(({ key, label }) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setDateFilter(key)}
+                                        className={`flex-1 text-xs px-2.5 py-1.5 rounded-md font-semibold transition-all whitespace-nowrap ${
+                                            dateFilter === key
+                                                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'
+                                                : 'text-slate-400 hover:text-white'
+                                        }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                            {/* Custom date picker — only shown when 'custom' is selected */}
+                            {dateFilter === 'custom' && (
+                                <input
+                                    type="date"
+                                    value={customDate}
+                                    onChange={e => setCustomDate(e.target.value)}
+                                    className="input-field text-xs py-1.5 border-indigo-500/40 focus:border-indigo-500"
+                                    max={new Date().toISOString().split('T')[0]}
+                                />
+                            )}
                         </div>
                     </div>
                     
@@ -466,63 +499,108 @@ const AdminDashboard = () => {
 
                 {/* Selected Date's Tasks Output */}
                 <div className="glass-card p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-800/60 pb-4 sm:pb-0 sm:border-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-800/60 pb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 flex-shrink-0"><ListTodo size={20} /></div>
-                            <h2 className="text-lg sm:text-xl font-bold text-white">{dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}'s Tasks Log</h2>
+                            <div>
+                                <h2 className="text-lg sm:text-xl font-bold text-white">
+                                    {dateFilter === 'today' && "Today's Tasks"}
+                                    {dateFilter === 'yesterday' && "Yesterday's Tasks"}
+                                    {dateFilter === 'last7' && 'Last 7 Days — Tasks'}
+                                    {dateFilter === 'last30' && 'Last 30 Days — Tasks'}
+                                    {dateFilter === 'all' && 'All-Time Task History'}
+                                    {dateFilter === 'custom' && (customDate ? `Tasks for ${customDate}` : 'Pick a Date')}
+                                </h2>
+                                <p className="text-xs text-slate-500">{tasks.length} total entries</p>
+                            </div>
                         </div>
                         <span className="text-xs font-bold bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700 w-fit">Live Sync</span>
                     </div>
-                    
-                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                        {tasks.length > 0 ? (
-                            (() => {
-                                const tasksByUser = {};
-                                tasks.forEach(task => {
-                                    if (!tasksByUser[task.user_name]) tasksByUser[task.user_name] = [];
-                                    tasksByUser[task.user_name].push(task);
-                                });
 
-                                return Object.keys(tasksByUser).map(userName => (
-                                    <div key={userName} className="bg-slate-900/30 border border-slate-700/50 rounded-xl p-4">
-                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-700/50 pb-2">
-                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                                                {userName.charAt(0).toUpperCase()}
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                        {tasks.length > 0 ? (() => {
+                            // Group tasks by date
+                            const byDate = {};
+                            tasks.forEach(task => {
+                                const d = task.date;
+                                if (!byDate[d]) byDate[d] = {};
+                                if (!byDate[d][task.user_name]) byDate[d][task.user_name] = [];
+                                byDate[d][task.user_name].push(task);
+                            });
+
+                            const sortedDates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+                            return sortedDates.map(date => {
+                                const allForDate = Object.values(byDate[date]).flat();
+                                const dCompleted = allForDate.filter(t => getVisualStatus(t) === 'completed').length;
+                                const dMissed    = allForDate.filter(t => getVisualStatus(t) === 'missed').length;
+                                const dPending   = allForDate.filter(t => getVisualStatus(t) === 'pending').length;
+
+                                // Human-readable date label
+                                const dateLabel = (() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                                    if (date === today) return `Today — ${date}`;
+                                    if (date === yesterday) return `Yesterday — ${date}`;
+                                    return new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                })();
+
+                                return (
+                                    <div key={date} className="bg-slate-900/30 border border-slate-700/50 rounded-xl overflow-hidden">
+                                        {/* Date header with summary */}
+                                        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-800/40 border-b border-slate-700/40">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar size={14} className="text-indigo-400" />
+                                                <span className="text-sm font-bold text-indigo-300">{dateLabel}</span>
                                             </div>
-                                            <h3 className="text-sm font-bold text-indigo-300">{userName}'s Schedule</h3>
+                                            <div className="flex items-center gap-2 text-[10px] font-bold">
+                                                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">✅ {dCompleted}</span>
+                                                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">⏳ {dPending}</span>
+                                                <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full">❌ {dMissed}</span>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            {tasksByUser[userName].map(task => {
-                                                const scheduledTime = new Date(task.scheduled_time);
-                                                const timeStr = scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                                
-                                                return (
-                                                    <div key={task.id} className="bg-slate-800/40 border border-slate-700/50 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-700/40 transition-colors group">
-                                                        <div className="min-w-0">
-                                                            <p className="font-bold text-white text-sm mb-1 truncate">{task.task_name}</p>
-                                                            <div className="flex items-center gap-3 text-xs text-slate-400">
-                                                                <span className="flex items-center gap-1"><Clock size={12} /> {timeStr}</span>
-                                                                <span className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{task.duration_minutes}m</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex sm:justify-end flex-shrink-0 self-end sm:self-auto">
-                                                            {(() => {
-                                                                const vs = getVisualStatus(task);
-                                                                if (vs === 'completed') return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><CheckCircle size={12}/> Done</span>;
-                                                                if (vs === 'missed') return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><XCircle size={12}/> Missed</span>;
-                                                                return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><Clock size={12}/> Pending</span>;
-                                                            })()}
-                                                        </div>
+
+                                        {/* Tasks grouped by user under each date */}
+                                        <div className="p-3 space-y-3">
+                                            {Object.keys(byDate[date]).map(userName => (
+                                                <div key={userName}>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">{userName.charAt(0).toUpperCase()}</div>
+                                                        <h3 className="text-xs font-bold text-indigo-300">{userName}'s Schedule</h3>
                                                     </div>
-                                                )
-                                            })}
+                                                    <div className="space-y-1.5">
+                                                        {byDate[date][userName].map(task => {
+                                                            const timeStr = new Date(task.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                                            const vs = getVisualStatus(task);
+                                                            return (
+                                                                <div key={task.id} className="bg-slate-800/40 border border-slate-700/50 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-700/40 transition-colors">
+                                                                    <div className="min-w-0">
+                                                                        <p className="font-bold text-white text-sm truncate">{task.task_name}</p>
+                                                                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+                                                                            <span className="flex items-center gap-1"><Clock size={11} /> {timeStr}</span>
+                                                                            <span className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{task.duration_minutes}m</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex sm:justify-end flex-shrink-0">
+                                                                        {vs === 'completed' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><CheckCircle size={11}/> Done</span>}
+                                                                        {vs === 'missed'    && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><XCircle size={11}/> Missed</span>}
+                                                                        {vs === 'pending'   && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><Clock size={11}/> Pending</span>}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                ));
-                            })()
-                        ) : (
+                                );
+                            });
+                        })() : (
                             <div className="text-center py-12 text-slate-500 border border-dashed border-slate-700 rounded-xl">
-                                No tasks found for this date.
+                                {dateFilter === 'custom' && !customDate
+                                    ? 'Please pick a date using the date picker above.'
+                                    : 'No tasks found for this period.'}
                             </div>
                         )}
                     </div>
