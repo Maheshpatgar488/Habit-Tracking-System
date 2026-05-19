@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { UserPlus, CalendarPlus, Users, Loader, ListTodo, CheckCircle, Clock, XCircle, Activity, BarChart2, PieChart as PieChartIcon, TrendingUp, X, Trash2, Calendar, ChevronDown } from 'lucide-react';
+import { UserPlus, CalendarPlus, Users, Loader, ListTodo, CheckCircle, Clock, XCircle, Activity, BarChart2, PieChart as PieChartIcon, TrendingUp, X, Trash2, Calendar, ChevronDown, Sun, Sunrise, Moon } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -173,8 +173,46 @@ const AdminDashboard = () => {
     const pendingPercent = totalTasks === 0 ? 0 : Math.round((pendingTasks / totalTasks) * 100);
     const missedPercent = totalTasks === 0 ? 0 : Math.round((missedTasks / totalTasks) * 100);
 
+    const getGreetingText = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
+    const getGreetingIcon = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return <Sunrise className="w-8 h-8 md:w-10 md:h-10 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />;
+        if (hour < 17) return <Sun className="w-8 h-8 md:w-10 md:h-10 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />;
+        return <Moon className="w-8 h-8 md:w-10 md:h-10 text-indigo-300 drop-shadow-[0_0_10px_rgba(129,140,248,0.5)]" />;
+    };
+
+    const adminName = localStorage.getItem('userName') || 'Admin';
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Dynamic Greeting Header */}
+            <div className="glass-card p-6 flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden group">
+                <div className="absolute -right-12 -top-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-700" />
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="p-3 rounded-2xl bg-slate-900/50 border border-slate-700/50 flex-shrink-0">
+                        {getGreetingIcon()}
+                    </div>
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                            {getGreetingText()}, <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-indigo-200 to-purple-300">{adminName}</span>! 👑
+                        </h1>
+                        <p className="text-slate-400 text-sm mt-0.5 font-medium">
+                            System-wide automated routine controls and tracking panel.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold relative z-10 self-start md:self-auto">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    System Active
+                </div>
+            </div>
+
             {/* Quick Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="glass-card p-5 relative overflow-hidden group">
