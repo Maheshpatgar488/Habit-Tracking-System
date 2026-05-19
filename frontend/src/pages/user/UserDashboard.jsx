@@ -194,14 +194,28 @@ const UserDashboard = () => {
 
     if (loading) return <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={48} /></div>;
 
+    // Helper to get visual status (consistent with individual cards)
+    const getVisualStatus = (task) => {
+        if (task.status === 'pending') {
+            const scheduledTime = new Date(task.scheduled_time);
+            const endTime = new Date(scheduledTime.getTime() + task.duration_minutes * 60000);
+            if (new Date() > endTime) {
+                return 'missed';
+            }
+        }
+        return task.status;
+    };
+
     // Calculate Progress
-    const completedTasks = timeline.filter(t => t.status === 'completed').length;
+    const completedTasks = timeline.filter(t => getVisualStatus(t) === 'completed').length;
+    const missedTasksCount = timeline.filter(t => getVisualStatus(t) === 'missed').length;
+    const pendingTasksCount = timeline.filter(t => getVisualStatus(t) === 'pending').length;
     const totalTasks = timeline.length;
     const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
     // Advanced UI Data (find the next pending task that has not expired yet)
     const nextTask = timeline.find(t => {
-        if (t.status !== 'pending') return false;
+        if (getVisualStatus(t) !== 'pending') return false;
         const endTime = new Date(new Date(t.scheduled_time).getTime() + t.duration_minutes * 60000);
         return new Date() < endTime;
     });
@@ -322,11 +336,11 @@ const UserDashboard = () => {
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed</p>
                 </div>
                 <div className="glass-card p-4 flex flex-col items-center justify-center border-red-500/20">
-                    <p className="text-3xl font-bold text-red-400 mb-1">{timeline.filter(t => t.status === 'missed').length}</p>
+                    <p className="text-3xl font-bold text-red-400 mb-1">{missedTasksCount}</p>
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Missed</p>
                 </div>
                 <div className="glass-card p-4 flex flex-col items-center justify-center border-slate-500/20">
-                    <p className="text-3xl font-bold text-slate-300 mb-1">{timeline.filter(t => t.status === 'pending').length}</p>
+                    <p className="text-3xl font-bold text-slate-300 mb-1">{pendingTasksCount}</p>
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending</p>
                 </div>
             </div>
