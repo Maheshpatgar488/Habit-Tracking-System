@@ -201,11 +201,18 @@ const UserDashboard = () => {
         return task.status;
     };
 
-    const getGreeting = () => {
+    const getGreetingText = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return 'Good Morning 🌅';
-        if (hour < 17) return 'Good Afternoon ☀️';
-        return 'Good Evening 🌌';
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
+    const getGreetingEmoji = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return '🌅';
+        if (hour < 17) return '☀️';
+        return '🌌';
     };
 
     if (loading) return <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={48} /></div>;
@@ -268,8 +275,13 @@ const UserDashboard = () => {
             {/* Premium Header Section */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
                 <div className="text-center md:text-left">
-                    <h2 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-300 mb-2">
-                        {getGreeting()}, {userName.split(' ')[0]}
+                    <h2 className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-4xl md:text-5xl font-black mb-2">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-300">
+                            {getGreetingText()}, {userName.split(' ')[0]}
+                        </span>
+                        <span className="inline-block drop-shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none">
+                            {getGreetingEmoji()}
+                        </span>
                     </h2>
                     <p className="text-slate-400 font-medium">Keep crushing your routines. Consistency is key.</p>
                 </div>
