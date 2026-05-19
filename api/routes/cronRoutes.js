@@ -131,9 +131,8 @@ router.get('/notify', async (req, res) => {
     if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
         return res.status(200).json({ message: 'VAPID keys not configured' });
     }
-
     try {
-        const query = `
+        const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
@@ -141,18 +140,28 @@ router.get('/notify', async (req, res) => {
             AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
         `;
 
-        const [tasks] = await pool.query(query);
+        const queryStart = `
+            SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
+            FROM daily_task_logs d
+            JOIN push_subscriptions p ON d.user_id = p.user_id
+            WHERE d.status = 'pending' 
+            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
+        `;
+
+        const [tasks5Min] = await pool.query(query5Min);
+        const [tasksStart] = await pool.query(queryStart);
 
         let sentCount = 0;
-        if (tasks.length > 0) {
-            for (const task of tasks) {
+        
+        if (tasks5Min.length > 0) {
+            for (const task of tasks5Min) {
                 const pushSubscription = {
                     endpoint: task.endpoint,
                     keys: { p256dh: task.p256dh, auth: task.auth }
                 };
 
                 const payload = JSON.stringify({
-                    title: 'Upcoming Task Reminder',
+                    title: 'Upcoming Task Reminder ⏰',
                     body: `Reminder: '${task.task_name}' starts in 5 minutes!`,
                     icon: '/icon.png'
                 });
@@ -161,11 +170,36 @@ router.get('/notify', async (req, res) => {
                     await webpush.sendNotification(pushSubscription, payload);
                     sentCount++;
                 } catch (err) {
-                    console.error('Failed to send notification', err);
+                    console.error('Failed to send 5-min notification', err);
                 }
             }
         }
-        res.status(200).json({ message: `Sent ${sentCount} notifications out of ${tasks.length} due` });
+
+        if (tasksStart.length > 0) {
+            for (const task of tasksStart) {
+                const pushSubscription = {
+                    endpoint: task.endpoint,
+                    keys: { p256dh: task.p256dh, auth: task.auth }
+                };
+
+                const payload = JSON.stringify({
+                    title: 'Task Started 🚀',
+                    body: `Your task '${task.task_name}' has been started, please complete on time!`,
+                    icon: '/icon.png'
+                });
+
+                try {
+                    await webpush.sendNotification(pushSubscription, payload);
+                    sentCount++;
+                } catch (err) {
+                    console.error('Failed to send start notification', err);
+                }
+            }
+        }
+
+        res.status(200).json({ 
+            message: `Sent ${sentCount} notifications (5-min: ${tasks5Min.length}, start: ${tasksStart.length})` 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

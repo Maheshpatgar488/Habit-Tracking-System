@@ -19,7 +19,7 @@ cron.schedule('* * * * *', async () => {
 
     try {
         // Get tasks that are exactly 5 minutes away (using timezone-independent DB calculations)
-        const query = `
+        const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
@@ -27,12 +27,22 @@ cron.schedule('* * * * *', async () => {
             AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
         `;
 
-        const [tasks] = await pool.query(query);
+        // Get tasks that are starting now
+        const queryStart = `
+            SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
+            FROM daily_task_logs d
+            JOIN push_subscriptions p ON d.user_id = p.user_id
+            WHERE d.status = 'pending' 
+            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
+        `;
 
-        if (tasks.length > 0) {
-            console.log(`[CRON] Found ${tasks.length} tasks starting in 5 minutes. Sending notifications...`);
+        const [tasks5Min] = await pool.query(query5Min);
+        const [tasksStart] = await pool.query(queryStart);
+
+        if (tasks5Min.length > 0) {
+            console.log(`[CRON] Found ${tasks5Min.length} tasks starting in 5 minutes. Sending reminders...`);
             
-            for (const task of tasks) {
+            for (const task of tasks5Min) {
                 const pushSubscription = {
                     endpoint: task.endpoint,
                     keys: {
@@ -42,16 +52,43 @@ cron.schedule('* * * * *', async () => {
                 };
 
                 const payload = JSON.stringify({
-                    title: 'Upcoming Task Reminder',
+                    title: 'Upcoming Task Reminder ⏰',
                     body: `Reminder: '${task.task_name}' starts in 5 minutes!`,
                     icon: '/icon.png'
                 });
 
                 try {
                     await webpush.sendNotification(pushSubscription, payload);
-                    console.log(`[CRON] Notification sent to user ${task.user_id} for task ${task.task_name}`);
+                    console.log(`[CRON] 5-min reminder sent to user ${task.user_id} for task ${task.task_name}`);
                 } catch (err) {
-                    console.error(`[CRON] Failed to send notification to user ${task.user_id}:`, err);
+                    console.error(`[CRON] Failed to send 5-min reminder to user ${task.user_id}:`, err);
+                }
+            }
+        }
+
+        if (tasksStart.length > 0) {
+            console.log(`[CRON] Found ${tasksStart.length} tasks starting now. Sending start notifications...`);
+            
+            for (const task of tasksStart) {
+                const pushSubscription = {
+                    endpoint: task.endpoint,
+                    keys: {
+                        p256dh: task.p256dh,
+                        auth: task.auth
+                    }
+                };
+
+                const payload = JSON.stringify({
+                    title: 'Task Started 🚀',
+                    body: `Your task '${task.task_name}' has been started, please complete on time!`,
+                    icon: '/icon.png'
+                });
+
+                try {
+                    await webpush.sendNotification(pushSubscription, payload);
+                    console.log(`[CRON] Start notification sent to user ${task.user_id} for task ${task.task_name}`);
+                } catch (err) {
+                    console.error(`[CRON] Failed to send start notification to user ${task.user_id}:`, err);
                 }
             }
         }
