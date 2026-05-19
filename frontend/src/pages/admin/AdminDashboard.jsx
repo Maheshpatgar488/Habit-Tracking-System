@@ -396,10 +396,12 @@ const AdminDashboard = () => {
                     <form onSubmit={handleCreateRoutine} className="space-y-4 relative z-10">
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Select User</label>
-                            <select className="input-field appearance-none" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} required>
-                                <option value="">-- Choose User --</option>
+                            <select className="input-field appearance-none w-full max-w-full truncate block pr-10" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} required>
+                                <option value="" className="bg-slate-900 text-slate-400">-- Choose User --</option>
                                 {users.map(user => (
-                                    <option key={user.id} value={user.id}>{user.name} ({user.username})</option>
+                                    <option key={user.id} value={user.id} className="bg-slate-900 text-slate-100">
+                                        {user.name} ({user.username})
+                                    </option>
                                 ))}
                             </select>
                         </div>
