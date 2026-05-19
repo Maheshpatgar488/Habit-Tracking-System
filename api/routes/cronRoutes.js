@@ -132,22 +132,26 @@ router.get('/notify', async (req, res) => {
         return res.status(200).json({ message: 'VAPID keys not configured' });
     }
     try {
-        // Get tasks starting in 5 minutes (UTC direct comparison)
+        // scheduled_time is stored in IST (local), TiDB NOW() is UTC.
+        // Subtract 330 min to convert IST -> UTC, then compare with NOW() UTC.
+        // Range check handles cron timing jitter.
+
+        // 5-min reminder: task is between 4 and 6 minutes away
         const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
-            WHERE d.status = 'pending' 
-            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
+            WHERE d.status = 'pending'
+            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN 4 AND 6
         `;
 
-        // Get tasks starting right now (UTC direct comparison)
+        // Start notification: task started within the last 1 minute
         const queryStart = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
-            WHERE d.status = 'pending' 
-            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
+            WHERE d.status = 'pending'
+            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN -1 AND 1
         `;
 
         const [tasks5Min] = await pool.query(query5Min);
