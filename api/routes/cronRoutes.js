@@ -132,20 +132,22 @@ router.get('/notify', async (req, res) => {
         return res.status(200).json({ message: 'VAPID keys not configured' });
     }
     try {
+        // Get tasks starting in 5 minutes (UTC direct comparison)
         const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
+            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 MINUTE), '%Y-%m-%d %H:%i')
         `;
 
+        // Get tasks starting right now (UTC direct comparison)
         const queryStart = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_FORMAT(DATE_ADD(d.scheduled_time, INTERVAL p.timezone_offset MINUTE), '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
+            AND DATE_FORMAT(d.scheduled_time, '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
         `;
 
         const [tasks5Min] = await pool.query(query5Min);
