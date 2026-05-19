@@ -386,24 +386,61 @@ const UserDashboard = () => {
                 </div>
             </div>
 
-            {/* Quick Metrics Bar */}
+            {/* Quick Metrics & Interactive Tabs */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 relative z-10">
-                <div className="glass-card p-4 flex flex-col items-center justify-center border-slate-800/80 hover:border-indigo-500/20 transition-colors">
+                {/* Tab: Scheduled / All */}
+                <div 
+                    onClick={() => setStatusFilter('all')}
+                    className={`glass-card p-4 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 active:scale-95 border-slate-800/80 hover:scale-[1.02] ${
+                        statusFilter === 'all' 
+                            ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_0_15px_rgba(99,102,241,0.25)] ring-1 ring-indigo-500/30' 
+                            : 'hover:border-indigo-500/20'
+                    }`}
+                >
                     <p className="text-3xl font-black text-indigo-400 mb-0.5">{totalTasks}</p>
-                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Scheduled</p>
+                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">All Scheduled</p>
                 </div>
-                <div className="glass-card p-4 flex flex-col items-center justify-center border-slate-800/80 hover:border-emerald-500/20 transition-colors">
+                
+                {/* Tab: Completed */}
+                <div 
+                    onClick={() => setStatusFilter('completed')}
+                    className={`glass-card p-4 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 active:scale-95 border-slate-800/80 hover:scale-[1.02] ${
+                        statusFilter === 'completed' 
+                            ? 'border-emerald-500 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.25)] ring-1 ring-emerald-500/30' 
+                            : 'hover:border-emerald-500/20'
+                    }`}
+                >
                     <p className="text-3xl font-black text-emerald-400 mb-0.5">{completedTasks}</p>
                     <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Completed</p>
                 </div>
-                <div className="glass-card p-4 flex flex-col items-center justify-center border-slate-800/80 hover:border-red-500/20 transition-colors">
+                
+                {/* Tab: Missed */}
+                <div 
+                    onClick={() => setStatusFilter('missed')}
+                    className={`glass-card p-4 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 active:scale-95 border-slate-800/80 hover:scale-[1.02] ${
+                        statusFilter === 'missed' 
+                            ? 'border-red-500 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.25)] ring-1 ring-red-500/30' 
+                            : 'hover:border-red-500/20'
+                    }`}
+                >
                     <p className="text-3xl font-black text-red-400 mb-0.5">{missedTasksCount}</p>
                     <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Missed</p>
                 </div>
-                <div className="glass-card p-4 flex flex-col items-center justify-center border-slate-800/80 hover:border-slate-700 transition-colors">
-                    <p className="text-3xl font-black text-slate-300 mb-0.5">{pendingTasksCount}</p>
+                
+                {/* Tab: Pending */}
+                <div 
+                    onClick={() => setStatusFilter('pending')}
+                    className={`glass-card p-4 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 active:scale-95 border-slate-800/80 hover:scale-[1.02] ${
+                        statusFilter === 'pending' 
+                            ? 'border-amber-500 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.25)] ring-1 ring-amber-500/30' 
+                            : 'hover:border-amber-500/20'
+                    }`}
+                >
+                    <p className="text-3xl font-black text-amber-400 mb-0.5">{pendingTasksCount}</p>
                     <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Pending</p>
                 </div>
+                
+                {/* Streak card (Static metric, non-clickable) */}
                 <div className="glass-card p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 border-slate-800/80 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border-amber-500/10 hover:border-amber-500/30 transition-colors">
                     <div className="flex items-center gap-1.5 text-amber-500 font-black">
                         <Flame size={20} className="animate-pulse text-amber-400" />
@@ -427,26 +464,8 @@ const UserDashboard = () => {
                     />
                 </div>
 
-                {/* Filter & View Mode Switcher */}
+                {/* View Mode Switcher */}
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-                    {/* Filter Badges */}
-                    <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800/80">
-                        {['all', 'pending', 'completed', 'missed'].map((filter) => (
-                            <button
-                                key={filter}
-                                onClick={() => setStatusFilter(filter)}
-                                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg capitalize transition-all ${
-                                    statusFilter === filter 
-                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
-                                        : 'text-slate-400 hover:text-slate-200'
-                                }`}
-                            >
-                                {filter}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* View Switcher */}
                     <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800/80">
                         <button 
                             onClick={() => setViewMode('grid')}
