@@ -121,7 +121,7 @@ router.get('/tasks', async (req, res) => {
 
         let query = `
             SELECT d.id, d.task_name, DATE_FORMAT(d.scheduled_time, '%Y-%m-%dT%H:%i:%s') as scheduled_time, 
-                   d.duration_minutes, d.status, u.name as user_name, d.date 
+                   d.duration_minutes, d.status, u.name as user_name, DATE_FORMAT(d.date, '%Y-%m-%d') as date 
             FROM daily_task_logs d
             JOIN users u ON d.user_id = u.id
         `;

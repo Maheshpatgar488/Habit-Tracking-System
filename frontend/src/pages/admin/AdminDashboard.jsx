@@ -522,7 +522,9 @@ const AdminDashboard = () => {
                             // Group tasks by date
                             const byDate = {};
                             tasks.forEach(task => {
-                                const d = task.date;
+                                // Extract only YYYY-MM-DD if date contains 'T' or a time component
+                                const rawDate = task.date || '';
+                                const d = typeof rawDate === 'string' && rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
                                 if (!byDate[d]) byDate[d] = {};
                                 if (!byDate[d][task.user_name]) byDate[d][task.user_name] = [];
                                 byDate[d][task.user_name].push(task);
