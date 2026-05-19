@@ -19,19 +19,19 @@ const Header = () => {
     const hasToken = !!localStorage.getItem('token');
     
     return (
-        <header className="sticky top-0 z-50 glass-card mx-4 mt-4 mb-8 px-6 py-4 flex justify-between items-center rounded-2xl">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <Layers className="text-white" size={20} />
+        <header className="sticky top-0 z-50 glass-card mx-2 sm:mx-4 mt-3 sm:mt-4 mb-6 sm:mb-8 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center rounded-2xl">
+            <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <Layers className="text-white" size={18} />
                 </div>
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-purple-200">
-                    TaskFlow <span className="text-indigo-400 font-light text-xl">Pro</span>
+                <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-purple-200">
+                    TaskFlow <span className="text-indigo-400 font-light text-base sm:text-xl">Pro</span>
                 </h1>
             </div>
             {hasToken && (
                 <button 
                     onClick={() => { localStorage.clear(); window.location.href = '/'; }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all"
                 >
                     <LogOut size={16} />
                     <span className="hidden sm:inline">Sign Out</span>
@@ -58,13 +58,13 @@ const AdminRoute = () => {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col relative">
+      <div className="min-h-screen flex flex-col relative overflow-x-hidden">
         {/* Background ambient light */}
         <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
 
         <Header />
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 pb-12 relative z-10">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-4 pb-12 relative z-10">
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/admin" element={<AdminRoute />} />

@@ -273,14 +273,14 @@ const UserDashboard = () => {
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 relative">
             {/* Ambient Background Lights - Clipped to prevent horizontal body overflow and viewport scaling bugs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[20%] w-[35rem] h-[35rem] bg-indigo-500/10 rounded-full blur-[120px]" />
-                <div className="absolute top-[30%] right-[10%] w-[25rem] h-[25rem] bg-fuchsia-500/5 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[20%] w-[15rem] h-[15rem] md:w-[35rem] md:h-[35rem] bg-indigo-500/10 rounded-full blur-[80px] md:blur-[120px]" />
+                <div className="absolute top-[30%] right-[10%] w-[10rem] h-[10rem] md:w-[25rem] md:h-[25rem] bg-fuchsia-500/5 rounded-full blur-[60px] md:blur-[100px]" />
             </div>
 
             {/* Premium Header Section */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
                 <div className="text-center md:text-left">
-                    <h2 className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-4xl md:text-5xl font-black mb-2">
+                    <h2 className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 text-2xl sm:text-3xl md:text-5xl font-black mb-2">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-300">
                             {getGreetingText()}, {userName.split(' ')[0]}
                         </span>
@@ -288,10 +288,10 @@ const UserDashboard = () => {
                             {getGreetingIcon()}
                         </span>
                     </h2>
-                    <p className="text-slate-400 font-medium">Keep crushing your routines. Consistency is key.</p>
+                    <p className="text-slate-400 font-medium text-sm md:text-base">Keep crushing your routines. Consistency is key.</p>
                 </div>
                 
-                <div className="flex items-center gap-4 bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-3 rounded-2xl">
+                <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-2 md:p-3 rounded-2xl self-start md:self-auto">
                     <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-xl">
                         <Calendar size={14} />
                         <span>Today</span>
@@ -366,15 +366,15 @@ const UserDashboard = () => {
                     <div className="h-52 w-full">
                         {chartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                                <AreaChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorDuration" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
                                             <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                                         </linearGradient>
                                     </defs>
-                                    <XAxis dataKey="time" stroke="#334155" tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#334155" tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickLine={false} axisLine={false} />
+                                    <XAxis dataKey="time" stroke="#334155" tick={{fill: '#64748b', fontSize: 9, fontWeight: 600}} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                    <YAxis stroke="#334155" tick={{fill: '#64748b', fontSize: 9, fontWeight: 600}} tickLine={false} axisLine={false} width={28} />
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(51, 65, 85, 0.3)" vertical={false} />
                                     <Tooltip 
                                         contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' }}
@@ -446,7 +446,7 @@ const UserDashboard = () => {
                 </div>
                 
                 {/* Streak card (Static metric, non-clickable) */}
-                <div className="glass-card p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 border-slate-800/80 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border-amber-500/10 hover:border-amber-500/30 transition-colors">
+                <div className="glass-card p-4 flex flex-col items-center justify-center col-span-1 md:col-span-1 border-slate-800/80 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border-amber-500/10 hover:border-amber-500/30 transition-colors">
                     <div className="flex items-center gap-1.5 text-amber-500 font-black">
                         <Flame size={20} className="animate-pulse text-amber-400" />
                         <span className="text-3xl">{streakDays}</span>
@@ -591,7 +591,7 @@ const UserDashboard = () => {
                         </div>
                     ) : (
                         /* TIMELINE VIEW (Vertical flow layout) */
-                        <div className="relative pl-6 md:pl-10 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800/60 before:border-dashed before:border-slate-800">
+                        <div className="relative pl-8 md:pl-10 space-y-4 md:space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800/60 before:border-dashed before:border-slate-800">
                             {filteredTimeline.map((task, idx) => {
                                 const now = new Date();
                                 const scheduledTime = new Date(task.scheduled_time);
@@ -625,14 +625,14 @@ const UserDashboard = () => {
                                 return (
                                     <div key={task.id} className="relative group animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
                                         {/* Step Indicator Dot */}
-                                        <div className={`absolute left-[-29px] md:left-[-37px] top-4 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${dotColor}`}>
+                                        <div className={`absolute left-[-26px] md:left-[-37px] top-4 w-5 h-5 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${dotColor}`}>
                                             {getStatusIcon(visualStatus, isUpcoming)}
                                         </div>
 
                                         {/* Step Details Box */}
-                                        <div className={`glass-card p-5 border transition-all duration-300 rounded-[22px] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:-translate-y-0.5 ${rowBorder}`}>
+                                        <div className={`glass-card p-4 md:p-5 border transition-all duration-300 rounded-[22px] flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 hover:-translate-y-0.5 ${rowBorder}`}>
                                             <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                                                <div className="bg-slate-950/80 px-3 py-2 rounded-xl text-center border border-slate-800 min-w-28 shadow-inner">
+                                                <div className="bg-slate-950/80 px-3 py-2 rounded-xl text-center border border-slate-800 min-w-20 md:min-w-28 shadow-inner">
                                                     <span className="text-indigo-400 font-extrabold text-sm block">{timeString}</span>
                                                     <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{endTimeString} End</span>
                                                 </div>
@@ -647,7 +647,7 @@ const UserDashboard = () => {
                                             </div>
 
                                             {/* Step Actions */}
-                                            <div className="min-w-40 flex justify-end">
+                                            <div className="flex justify-start md:justify-end md:min-w-40">
                                                 {isPending ? (
                                                     isUpcoming ? (
                                                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-800">
