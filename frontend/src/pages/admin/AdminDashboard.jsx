@@ -30,7 +30,7 @@ const AdminDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
             // Compute local date string (IST-aware)
             const localDate = new Date();
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             await axios.post(`${API_BASE_URL}/api/admin/users`, {
                 name: newUserName,
                 username: newUserUsername,
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             await axios.post(`${API_BASE_URL}/api/admin/routines`, {
                 user_id: selectedUser,
                 task_name: taskName,
@@ -107,7 +107,7 @@ const AdminDashboard = () => {
     const loadUserRoutines = async (userId) => {
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             const res = await axios.get(`${API_BASE_URL}/api/admin/routines/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -125,7 +125,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Are you sure you want to delete this routine? It will prevent future tasks from generating.')) return;
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             await axios.delete(`${API_BASE_URL}/api/admin/routines/${routineId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });

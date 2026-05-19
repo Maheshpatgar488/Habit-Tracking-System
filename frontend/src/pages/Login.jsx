@@ -29,7 +29,7 @@ const Login = ({ defaultRole = 'user' }) => {
         setLoading(true);
 
         try {
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
                 username,
                 password,

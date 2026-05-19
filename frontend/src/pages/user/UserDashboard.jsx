@@ -66,7 +66,7 @@ const UserDashboard = () => {
                     
                     const token = localStorage.getItem('token');
                     if (token) {
-                        const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+                        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
                         const subscriptionData = {
                             endpoint: existingSub.endpoint,
                             keys: {
@@ -89,7 +89,7 @@ const UserDashboard = () => {
     const fetchTimeline = async () => {
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             
             const localDate = new Date();
             const offset = localDate.getTimezoneOffset();
@@ -131,7 +131,7 @@ const UserDashboard = () => {
     const markCompleted = async (taskId) => {
         try {
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             await axios.put(`${API_BASE_URL}/api/user/tasks/${taskId}/complete`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -179,7 +179,7 @@ const UserDashboard = () => {
             }
 
             const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             const subscriptionData = {
                 endpoint: subscription.endpoint,
                 keys: {
