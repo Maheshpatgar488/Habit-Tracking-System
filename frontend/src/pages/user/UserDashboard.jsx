@@ -508,10 +508,14 @@ const UserDashboard = () => {
                                 const isCompleted = visualStatus === 'completed';
                                 const isMissed = visualStatus === 'missed';
                                 
-                                // Glowing borders & color mappings
+                                // Glowing borders & color mappings with beautiful ambient shadows
                                 const cardBorder = isPending
-                                    ? (isUpcoming ? 'border-slate-800/80 hover:border-slate-700/80 bg-slate-900/30' : 'border-indigo-500/20 hover:border-indigo-500/40 bg-indigo-950/5')
-                                    : (isCompleted ? 'border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-950/5' : 'border-red-500/20 hover:border-red-500/40 bg-red-950/5');
+                                    ? (isUpcoming 
+                                        ? 'border-slate-800/80 hover:border-slate-700/80 bg-slate-900/30 hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]' 
+                                        : 'border-indigo-500/30 hover:border-indigo-500/60 bg-indigo-950/10 shadow-[0_0_20px_rgba(99,102,241,0.08)] hover:shadow-[0_0_30px_rgba(99,102,241,0.22)] ring-1 ring-indigo-500/20')
+                                    : (isCompleted 
+                                        ? 'border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-950/5 shadow-[0_0_20px_rgba(16,185,129,0.08)] hover:shadow-[0_0_30px_rgba(16,185,129,0.22)] ring-1 ring-emerald-500/10' 
+                                        : 'border-red-500/20 hover:border-red-500/50 bg-red-950/5 shadow-[0_0_20px_rgba(239,68,68,0.08)] hover:shadow-[0_0_30px_rgba(239,68,68,0.22)] ring-1 ring-red-500/10');
                                     
                                 const badgeClass = isPending 
                                     ? (isUpcoming ? 'bg-slate-800/80 text-slate-400 border border-slate-700/50' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse')
@@ -604,6 +608,15 @@ const UserDashboard = () => {
                                 if (isCompleted) dotColor = 'bg-emerald-600 border-emerald-400 text-white';
                                 if (isMissed) dotColor = 'bg-red-600 border-red-400 text-white';
 
+                                // Glowing borders & color mappings with beautiful ambient shadows
+                                const rowBorder = isPending
+                                    ? (isUpcoming 
+                                        ? 'border-slate-800/80 hover:border-slate-700/80 bg-slate-900/30' 
+                                        : 'border-indigo-500/30 hover:border-indigo-500/60 bg-indigo-950/5 shadow-[0_0_20px_rgba(99,102,241,0.06)] hover:shadow-[0_0_25px_rgba(99,102,241,0.18)]')
+                                    : (isCompleted 
+                                        ? 'border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-950/5 shadow-[0_0_20px_rgba(16,185,129,0.06)] hover:shadow-[0_0_25px_rgba(16,185,129,0.15)]' 
+                                        : 'border-red-500/20 hover:border-red-500/50 bg-red-950/5 shadow-[0_0_20px_rgba(239,68,68,0.06)] hover:shadow-[0_0_25px_rgba(239,68,68,0.15)]');
+
                                 return (
                                     <div key={task.id} className="relative group animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
                                         {/* Step Indicator Dot */}
@@ -612,7 +625,7 @@ const UserDashboard = () => {
                                         </div>
 
                                         {/* Step Details Box */}
-                                        <div className="glass-card p-5 border border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/30 transition-all rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className={`glass-card p-5 border transition-all duration-300 rounded-[22px] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:-translate-y-0.5 ${rowBorder}`}>
                                             <div className="flex flex-col md:flex-row gap-4 md:items-center">
                                                 <div className="bg-slate-950/80 px-3 py-2 rounded-xl text-center border border-slate-800 min-w-28 shadow-inner">
                                                     <span className="text-indigo-400 font-extrabold text-sm block">{timeString}</span>
