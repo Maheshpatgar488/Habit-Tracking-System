@@ -135,21 +135,33 @@ const AdminDashboard = () => {
 
     if (loading) return <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={48} /></div>;
 
+    // Compute the real visual status of a task (same logic as user dashboard)
+    // A pending task whose end time has passed is treated as 'missed' in the UI
+    const getVisualStatus = (task) => {
+        if (task.status === 'pending') {
+            const scheduledTime = new Date(task.scheduled_time);
+            const endTime = new Date(scheduledTime.getTime() + task.duration_minutes * 60000);
+            if (new Date() > endTime) return 'missed';
+        }
+        return task.status;
+    };
+
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const missedTasks = tasks.filter(t => t.status === 'missed').length;
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+    const completedTasks = tasks.filter(t => getVisualStatus(t) === 'completed').length;
+    const missedTasks = tasks.filter(t => getVisualStatus(t) === 'missed').length;
+    const pendingTasks = tasks.filter(t => getVisualStatus(t) === 'pending').length;
     const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
     const userTaskCounts = {};
     tasks.forEach(task => {
+        const vs = getVisualStatus(task);
         if (!userTaskCounts[task.user_name]) {
             userTaskCounts[task.user_name] = { name: task.user_name, completed: 0, missed: 0, pending: 0, total: 0 };
         }
         userTaskCounts[task.user_name].total += 1;
-        if (task.status === 'completed') userTaskCounts[task.user_name].completed += 1;
-        if (task.status === 'missed') userTaskCounts[task.user_name].missed += 1;
-        if (task.status === 'pending') userTaskCounts[task.user_name].pending += 1;
+        if (vs === 'completed') userTaskCounts[task.user_name].completed += 1;
+        if (vs === 'missed') userTaskCounts[task.user_name].missed += 1;
+        if (vs === 'pending') userTaskCounts[task.user_name].pending += 1;
     });
     
     const userPerformanceList = Object.values(userTaskCounts).sort((a, b) => b.total - a.total);
@@ -494,9 +506,12 @@ const AdminDashboard = () => {
                                                             </div>
                                                         </div>
                                                         <div className="flex sm:justify-end flex-shrink-0 self-end sm:self-auto">
-                                                            {task.status === 'completed' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><CheckCircle size={12}/> Done</span>}
-                                                            {task.status === 'missed' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><XCircle size={12}/> Missed</span>}
-                                                            {task.status === 'pending' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><Clock size={12}/> Pending</span>}
+                                                            {(() => {
+                                                                const vs = getVisualStatus(task);
+                                                                if (vs === 'completed') return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><CheckCircle size={12}/> Done</span>;
+                                                                if (vs === 'missed') return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><XCircle size={12}/> Missed</span>;
+                                                                return <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><Clock size={12}/> Pending</span>;
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 )
