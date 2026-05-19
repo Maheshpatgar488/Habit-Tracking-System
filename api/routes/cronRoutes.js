@@ -134,24 +134,26 @@ router.get('/notify', async (req, res) => {
     try {
         // scheduled_time is stored in IST (local), TiDB NOW() is UTC.
         // Subtract 330 min to convert IST -> UTC, then compare with NOW() UTC.
-        // Range check handles cron timing jitter.
+        // notif_*_sent flags ensure each notification fires only once.
 
-        // 5-min reminder: task is between 4 and 6 minutes away
+        // 5-min reminder: task starts in 4-6 minutes AND not yet sent
         const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
+            AND d.notif_5min_sent = 0
             AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN 4 AND 6
         `;
 
-        // Start notification: task started within the last 1 minute
+        // Start notification: task started within last 2 minutes AND not yet sent
         const queryStart = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
-            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN -1 AND 1
+            AND d.notif_start_sent = 0
+            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN -2 AND 1
         `;
 
         const [tasks5Min] = await pool.query(query5Min);
@@ -160,6 +162,7 @@ router.get('/notify', async (req, res) => {
         let sentCount = 0;
         
         if (tasks5Min.length > 0) {
+            const sentIds = [];
             for (const task of tasks5Min) {
                 const pushSubscription = {
                     endpoint: task.endpoint,
@@ -168,20 +171,29 @@ router.get('/notify', async (req, res) => {
 
                 const payload = JSON.stringify({
                     title: 'Upcoming Task Reminder ⏰',
-                    body: `Reminder: '${task.task_name}' starts in 5 minutes!`,
+                    body: `'${task.task_name}' starts in 5 minutes!`,
                     icon: '/icon.png'
                 });
 
                 try {
                     await webpush.sendNotification(pushSubscription, payload);
+                    sentIds.push(task.id);
                     sentCount++;
                 } catch (err) {
-                    console.error('Failed to send 5-min notification', err);
+                    console.error('Failed to send 5-min notification', err.statusCode || err.message);
                 }
+            }
+            if (sentIds.length > 0) {
+                const uniqueIds = [...new Set(sentIds)];
+                await pool.query(
+                    `UPDATE daily_task_logs SET notif_5min_sent = 1 WHERE id IN (${uniqueIds.map(() => '?').join(',')})`,
+                    uniqueIds
+                );
             }
         }
 
         if (tasksStart.length > 0) {
+            const sentIds = [];
             for (const task of tasksStart) {
                 const pushSubscription = {
                     endpoint: task.endpoint,
@@ -190,16 +202,24 @@ router.get('/notify', async (req, res) => {
 
                 const payload = JSON.stringify({
                     title: 'Task Started 🚀',
-                    body: `Your task '${task.task_name}' has been started, please complete on time!`,
+                    body: `Your task '${task.task_name}' has started — complete it on time!`,
                     icon: '/icon.png'
                 });
 
                 try {
                     await webpush.sendNotification(pushSubscription, payload);
+                    sentIds.push(task.id);
                     sentCount++;
                 } catch (err) {
-                    console.error('Failed to send start notification', err);
+                    console.error('Failed to send start notification', err.statusCode || err.message);
                 }
+            }
+            if (sentIds.length > 0) {
+                const uniqueIds = [...new Set(sentIds)];
+                await pool.query(
+                    `UPDATE daily_task_logs SET notif_start_sent = 1 WHERE id IN (${uniqueIds.map(() => '?').join(',')})`,
+                    uniqueIds
+                );
             }
         }
 

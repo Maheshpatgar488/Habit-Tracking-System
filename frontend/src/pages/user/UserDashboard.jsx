@@ -111,11 +111,21 @@ const UserDashboard = () => {
         fetchTimeline();
         checkSubscription();
 
+        // Poll every 60s when tab is active
         const interval = setInterval(() => {
-            fetchTimeline();
-        }, 30000);
+            if (!document.hidden) fetchTimeline();
+        }, 60000);
 
-        return () => clearInterval(interval);
+        // Immediately re-fetch when user comes back to the tab or laptop wakes from sleep
+        const handleVisibilityChange = () => {
+            if (!document.hidden) fetchTimeline();
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, []);
 
     const markCompleted = async (taskId) => {
