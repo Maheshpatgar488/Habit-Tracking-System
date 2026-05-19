@@ -211,7 +211,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold relative z-10 self-start md:self-auto">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
                         System Active
                     </div>
                 </div>
@@ -337,7 +337,7 @@ const AdminDashboard = () => {
                                         <p className="text-xs text-slate-400 font-medium">Real-time habit completion scores and ranks</p>
                                     </div>
                                 </div>
-                                <span className="text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse w-fit self-start sm:self-auto">
+                                <span className="text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit self-start sm:self-auto">
                                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Live Performance
                                 </span>
                             </div>
