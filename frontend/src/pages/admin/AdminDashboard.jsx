@@ -190,7 +190,7 @@ const AdminDashboard = () => {
             {/* Professional Analytics Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* System-Wide Task Distribution */}
-                <div className="glass-card p-8 lg:col-span-1">
+                <div className="glass-card p-4 sm:p-6 lg:p-8 lg:col-span-1">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-slate-700/50 pb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700"><TrendingUp size={20} /></div>
@@ -242,17 +242,17 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* User Performance List */}
-                <div className="glass-card p-8 lg:col-span-2 flex flex-col justify-between">
+                <div className="glass-card p-4 sm:p-6 lg:p-8 lg:col-span-2 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center justify-between mb-8 border-b border-slate-700/50 pb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-slate-700/50 pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700"><Users size={20} /></div>
+                                <div className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 flex-shrink-0"><Users size={20} /></div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-white tracking-wide">User Performance Leaderboard</h2>
+                                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">User Performance Leaderboard</h2>
                                     <p className="text-xs text-slate-400 font-medium">Real-time habit completion scores and ranks</p>
                                 </div>
                             </div>
-                            <span className="text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                            <span className="text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse w-fit self-start sm:self-auto">
                                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Live Performance
                             </span>
                         </div>
@@ -425,24 +425,24 @@ const AdminDashboard = () => {
             {/* Users List & Live Tasks Tracking */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Registered Users */}
-                <div className="glass-card p-6">
+                <div className="glass-card p-4 sm:p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400"><Users size={20} /></div>
+                        <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400 flex-shrink-0"><Users size={20} /></div>
                         <h2 className="text-xl font-bold text-white">Registered Users</h2>
                     </div>
                     <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                         {users.map((user) => (
-                            <div key={user.id} className="flex justify-between items-center bg-slate-900/50 border border-slate-800 p-4 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer group" onClick={() => loadUserRoutines(user.id)}>
+                            <div key={user.id} className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-slate-900/50 border border-slate-800 p-4 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer group" onClick={() => loadUserRoutines(user.id)}>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                                         {user.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-white text-lg">{user.name}</p>
-                                        <p className="text-sm text-slate-400">@{user.username}</p>
+                                    <div className="min-w-0">
+                                        <p className="font-bold text-white text-base sm:text-lg truncate">{user.name}</p>
+                                        <p className="text-sm text-slate-400 truncate">@{user.username}</p>
                                     </div>
                                 </div>
-                                <div className="text-indigo-400 text-sm font-bold group-hover:translate-x-1 transition-transform">
+                                <div className="text-indigo-400 text-xs sm:text-sm font-bold group-hover:translate-x-1 transition-transform self-end sm:self-auto flex-shrink-0">
                                     Manage Routine &rarr;
                                 </div>
                             </div>
@@ -451,13 +451,13 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Selected Date's Tasks Output */}
-                <div className="glass-card p-6">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="glass-card p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-800/60 pb-4 sm:pb-0 sm:border-0">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400"><ListTodo size={20} /></div>
-                            <h2 className="text-xl font-bold text-white">{dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}'s Tasks Log</h2>
+                            <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 flex-shrink-0"><ListTodo size={20} /></div>
+                            <h2 className="text-lg sm:text-xl font-bold text-white">{dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}'s Tasks Log</h2>
                         </div>
-                        <span className="text-xs font-bold bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">Live Sync</span>
+                        <span className="text-xs font-bold bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700 w-fit">Live Sync</span>
                     </div>
                     
                     <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -483,15 +483,15 @@ const AdminDashboard = () => {
                                                 const timeStr = scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                                 
                                                 return (
-                                                    <div key={task.id} className="bg-slate-800/40 border border-slate-700/50 p-3 rounded-lg flex items-center justify-between hover:bg-slate-700/40 transition-colors group">
-                                                        <div>
-                                                            <p className="font-bold text-white text-sm mb-1">{task.task_name}</p>
+                                                    <div key={task.id} className="bg-slate-800/40 border border-slate-700/50 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-700/40 transition-colors group">
+                                                        <div className="min-w-0">
+                                                            <p className="font-bold text-white text-sm mb-1 truncate">{task.task_name}</p>
                                                             <div className="flex items-center gap-3 text-xs text-slate-400">
                                                                 <span className="flex items-center gap-1"><Clock size={12} /> {timeStr}</span>
                                                                 <span className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{task.duration_minutes}m</span>
                                                             </div>
                                                         </div>
-                                                        <div>
+                                                        <div className="flex sm:justify-end flex-shrink-0 self-end sm:self-auto">
                                                             {task.status === 'completed' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><CheckCircle size={12}/> Done</span>}
                                                             {task.status === 'missed' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><XCircle size={12}/> Missed</span>}
                                                             {task.status === 'pending' && <span className="inline-flex items-center justify-center w-24 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-[10px] font-bold uppercase tracking-wide gap-1.5"><Clock size={12}/> Pending</span>}
@@ -547,9 +547,9 @@ const AdminDashboard = () => {
                                         const displayTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                                         return (
-                                            <div key={routine.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-700 hover:border-slate-600 transition-colors">
-                                                <div>
-                                                    <h4 className="font-bold text-white text-lg">{routine.task_name}</h4>
+                                            <div key={routine.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-xl bg-slate-900/50 border border-slate-700 hover:border-slate-600 transition-colors">
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-white text-base sm:text-lg truncate">{routine.task_name}</h4>
                                                     <div className="flex items-center gap-3 mt-1 text-sm text-slate-400">
                                                         <span className="flex items-center gap-1"><Clock size={14}/> {displayTime}</span>
                                                         <span className="bg-slate-800 px-2 py-0.5 rounded text-xs border border-slate-700">{routine.duration_minutes} min</span>
@@ -557,7 +557,7 @@ const AdminDashboard = () => {
                                                 </div>
                                                 <button 
                                                     onClick={() => handleDeleteRoutine(routine.id)}
-                                                    className="p-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg"
+                                                    className="p-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg flex-shrink-0 self-end sm:self-auto"
                                                     title="Delete Routine"
                                                 >
                                                     <Trash2 size={18} />
