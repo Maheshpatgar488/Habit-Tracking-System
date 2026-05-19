@@ -270,10 +270,12 @@ const UserDashboard = () => {
     });
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
-            {/* Ambient Background Lights */}
-            <div className="absolute top-[-10%] left-[20%] w-[35rem] h-[35rem] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none z-0" />
-            <div className="absolute top-[30%] right-[10%] w-[25rem] h-[25rem] bg-fuchsia-500/5 rounded-full blur-[100px] pointer-events-none z-0" />
+        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 relative">
+            {/* Ambient Background Lights - Clipped to prevent horizontal body overflow and viewport scaling bugs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[20%] w-[35rem] h-[35rem] bg-indigo-500/10 rounded-full blur-[120px]" />
+                <div className="absolute top-[30%] right-[10%] w-[25rem] h-[25rem] bg-fuchsia-500/5 rounded-full blur-[100px]" />
+            </div>
 
             {/* Premium Header Section */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
