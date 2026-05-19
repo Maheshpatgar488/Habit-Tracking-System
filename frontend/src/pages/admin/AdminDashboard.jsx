@@ -187,7 +187,8 @@ const AdminDashboard = () => {
         return <Moon className="w-8 h-8 md:w-10 md:h-10 text-indigo-300 drop-shadow-[0_0_10px_rgba(129,140,248,0.5)]" />;
     };
 
-    const adminName = localStorage.getItem('userName') || 'Admin';
+    const adminNameRaw = localStorage.getItem('userName') || 'Admin';
+    const adminName = adminNameRaw.toLowerCase() === 'system admin' ? 'Admin' : adminNameRaw;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
