@@ -16,7 +16,10 @@ import {
     TrendingUp, 
     Calendar,
     ChevronRight,
-    Award
+    Award,
+    Sun,
+    Sunrise,
+    Moon
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -208,11 +211,11 @@ const UserDashboard = () => {
         return 'Good Evening';
     };
 
-    const getGreetingEmoji = () => {
+    const getGreetingIcon = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return '🌅';
-        if (hour < 17) return '☀️';
-        return '🌌';
+        if (hour < 12) return <Sunrise className="w-8 h-8 md:w-10 md:h-10 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />;
+        if (hour < 17) return <Sun className="w-8 h-8 md:w-10 md:h-10 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />;
+        return <Moon className="w-8 h-8 md:w-10 md:h-10 text-indigo-300 drop-shadow-[0_0_10px_rgba(129,140,248,0.5)]" />;
     };
 
     if (loading) return <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={48} /></div>;
@@ -279,8 +282,8 @@ const UserDashboard = () => {
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-300">
                             {getGreetingText()}, {userName.split(' ')[0]}
                         </span>
-                        <span className="inline-block drop-shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none">
-                            {getGreetingEmoji()}
+                        <span className="inline-block select-none">
+                            {getGreetingIcon()}
                         </span>
                     </h2>
                     <p className="text-slate-400 font-medium">Keep crushing your routines. Consistency is key.</p>
