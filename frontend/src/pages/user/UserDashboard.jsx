@@ -19,7 +19,8 @@ import {
     Award,
     Sun,
     Sunrise,
-    Moon
+    Moon,
+    RotateCcw
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -138,6 +139,19 @@ const UserDashboard = () => {
             fetchTimeline();
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to complete task');
+        }
+    };
+
+    const revertTask = async (taskId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+            await axios.put(`${API_BASE_URL}/api/user/tasks/${taskId}/revert`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchTimeline();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to revert task');
         }
     };
 
@@ -587,14 +601,26 @@ const UserDashboard = () => {
                                                 </button>
                                             )
                                         ) : (
-                                            <div className={`w-full py-3 rounded-xl font-bold text-center border text-xs ${
-                                                isCompleted 
-                                                    ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
-                                                    : 'bg-red-500/5 text-red-400 border-red-500/10'
-                                            }`}>
-                                                {isCompleted ? 'Task Finished 🎉' : 'Task Missed ❌'}
+                                            <div className="flex gap-2 w-full">
+                                                <div className={`flex-1 py-3 rounded-xl font-bold text-center border text-xs ${
+                                                    isCompleted 
+                                                        ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
+                                                        : 'bg-red-500/5 text-red-400 border-red-500/10'
+                                                }`}>
+                                                    {isCompleted ? 'Task Finished 🎉' : 'Task Missed ❌'}
+                                                </div>
+                                                {isCompleted && !isExpired && (
+                                                    <button 
+                                                        onClick={() => revertTask(task.id)}
+                                                        className="px-3 bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/30 text-slate-400 hover:text-indigo-400 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-1.5 text-xs font-bold"
+                                                        title="Undo Task Completion"
+                                                    >
+                                                        <RotateCcw size={14} />
+                                                        <span>Undo</span>
+                                                    </button>
+                                                )}
                                             </div>
-                                        )}
+                                         )}
                                     </div>
                                 );
                             })}
@@ -611,6 +637,7 @@ const UserDashboard = () => {
                                 const endTimeString = endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                 
                                 const isUpcoming = now < scheduledTime;
+                                const isExpired = now > endTime;
                                 const visualStatus = getVisualStatus(task);
                                 
                                 const isPending = visualStatus === 'pending';
@@ -672,14 +699,26 @@ const UserDashboard = () => {
                                                         </button>
                                                     )
                                                 ) : (
-                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border ${
-                                                        isCompleted 
-                                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
-                                                    }`}>
-                                                        {isCompleted ? 'Finished 🎉' : 'Missed ❌'}
-                                                    </span>
-                                                )}
+                                                     <div className="flex items-center gap-2">
+                                                         <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border ${
+                                                             isCompleted 
+                                                                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                                                 : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                                         }`}>
+                                                             {isCompleted ? 'Finished 🎉' : 'Missed ❌'}
+                                                         </span>
+                                                         {isCompleted && !isExpired && (
+                                                             <button 
+                                                                 onClick={() => revertTask(task.id)}
+                                                                 className="p-2 bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/30 text-slate-400 hover:text-indigo-400 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-1 text-xs font-bold"
+                                                                 title="Undo Task Completion"
+                                                             >
+                                                                 <RotateCcw size={12} />
+                                                                 <span>Undo</span>
+                                                             </button>
+                                                         )}
+                                                     </div>
+                                                 )}
                                             </div>
                                         </div>
                                     </div>

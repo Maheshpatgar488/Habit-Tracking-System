@@ -97,6 +97,57 @@ router.put('/tasks/:id/complete', async (req, res) => {
     }
 });
 
+// Revert task from completed back to pending
+router.put('/tasks/:id/revert', async (req, res) => {
+    try {
+        const taskId = req.params.id;
+        
+        // Ensure the task belongs to the user
+        const [task] = await pool.query(
+            "SELECT *, DATE_FORMAT(scheduled_time, '%Y-%m-%d %H:%i:%s') as scheduled_time_str FROM daily_task_logs WHERE id = ? AND user_id = ?",
+            [taskId, req.user.id]
+        );
+        
+        if (task.length === 0) {
+            return res.status(404).json({ message: 'Task not found' });
+        }
+
+        if (task[0].status !== 'completed') {
+            return res.status(400).json({ message: 'Only completed tasks can be reverted back to pending' });
+        }
+
+        // Get the user's registered timezone offset from push_subscriptions
+        const [[sub]] = await pool.query(
+            "SELECT MIN(timezone_offset) as tz FROM push_subscriptions WHERE user_id = ?",
+            [req.user.id]
+        );
+        const tzOffset = sub && sub.tz !== null ? parseInt(sub.tz) : -330;
+
+        // Current user time (timezone adjusted representation)
+        const now = new Date();
+        const userLocalNow = new Date(now.getTime() - tzOffset * 60000);
+
+        const startTime = new Date(task[0].scheduled_time_str + 'Z');
+        const endTime = new Date(startTime.getTime() + task[0].duration_minutes * 60000);
+
+        // A task can only be reverted while its duration window is still active!
+        if (userLocalNow > endTime) {
+            await pool.query('UPDATE daily_task_logs SET status = "missed" WHERE id = ?', [taskId]);
+            return res.status(400).json({ message: 'The task window has closed. The task is now marked as missed and cannot be reverted!' });
+        }
+
+        // Reset status to pending and reset notification flags to allow retry
+        await pool.query(
+            'UPDATE daily_task_logs SET status = "pending", notif_5min_sent = 0, notif_start_sent = 0 WHERE id = ?',
+            [taskId]
+        );
+        res.json({ message: 'Task reverted to pending' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Subscribe to push notifications
 router.post('/subscribe', async (req, res) => {
     try {
