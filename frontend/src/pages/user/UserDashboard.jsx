@@ -111,10 +111,10 @@ const UserDashboard = () => {
         fetchTimeline();
         checkSubscription();
 
-        // Poll every 60s when tab is active
+        // Poll every 5s when tab is active to instantly sync status across multiple devices (e.g. mobile and laptop)
         const interval = setInterval(() => {
             if (!document.hidden) fetchTimeline();
-        }, 60000);
+        }, 5000);
 
         // Immediately re-fetch when user comes back to the tab or laptop wakes from sleep
         const handleVisibilityChange = () => {
