@@ -136,14 +136,14 @@ router.get('/notify', async (req, res) => {
         // Subtract user timezone offset to convert IST -> UTC, then compare with UTC_TIMESTAMP().
         // notif_*_sent flags ensure each notification fires only once.
 
-        // 5-min reminder: task starts in 4-6 minutes AND not yet sent
+        // 5-min reminder: task starts in 4-5 minutes AND not yet sent
         const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_5min_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 4 AND 6
+            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 4 AND 5
         `;
 
         // Start notification: task started within last 2 minutes AND not yet sent
