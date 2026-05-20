@@ -30,7 +30,7 @@ cron.schedule('* * * * *', async () => {
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_5min_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN 4 AND 6
+            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 4 AND 6
         `;
 
         // Start notification: task started within last 2 minutes AND hasn't been notified yet
@@ -40,7 +40,7 @@ cron.schedule('* * * * *', async () => {
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_start_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN -2 AND 1
+            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN -2 AND 1
         `;
 
         const [tasks5Min] = await pool.query(query5Min);

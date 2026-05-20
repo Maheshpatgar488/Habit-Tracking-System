@@ -17,7 +17,7 @@ cron.schedule('* * * * *', async () => {
                     (SELECT MIN(timezone_offset) FROM push_subscriptions WHERE user_id = d.user_id), 
                     -330
                 ) MINUTE
-            ) < NOW()
+            ) < UTC_TIMESTAMP()
         `;
 
         const [result] = await pool.query(query);

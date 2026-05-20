@@ -72,7 +72,7 @@ router.get('/status', async (req, res) => {
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending' 
-            AND DATE_ADD(DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE), INTERVAL COALESCE(p.timezone_offset, -330) MINUTE) < NOW()
+            AND DATE_ADD(DATE_ADD(d.scheduled_time, INTERVAL d.duration_minutes MINUTE), INTERVAL COALESCE(p.timezone_offset, -330) MINUTE) < UTC_TIMESTAMP()
         `;
         const [expiredTasks] = await pool.query(selectQuery);
 
@@ -112,7 +112,7 @@ router.get('/status', async (req, res) => {
                     (SELECT MIN(timezone_offset) FROM push_subscriptions WHERE user_id = d.user_id), 
                     -330
                 ) MINUTE
-            ) < NOW()
+            ) < UTC_TIMESTAMP()
         `;
         const [result] = await pool.query(updateQuery);
 
@@ -132,8 +132,8 @@ router.get('/notify', async (req, res) => {
         return res.status(200).json({ message: 'VAPID keys not configured' });
     }
     try {
-        // scheduled_time is stored in IST (local), TiDB NOW() is UTC.
-        // Subtract 330 min to convert IST -> UTC, then compare with NOW() UTC.
+        // scheduled_time is stored in IST (local), TiDB UTC_TIMESTAMP() is UTC.
+        // Subtract user timezone offset to convert IST -> UTC, then compare with UTC_TIMESTAMP().
         // notif_*_sent flags ensure each notification fires only once.
 
         // 5-min reminder: task starts in 4-6 minutes AND not yet sent
@@ -143,7 +143,7 @@ router.get('/notify', async (req, res) => {
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_5min_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN 4 AND 6
+            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 4 AND 6
         `;
 
         // Start notification: task started within last 2 minutes AND not yet sent
@@ -153,7 +153,7 @@ router.get('/notify', async (req, res) => {
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_start_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(d.scheduled_time, INTERVAL -330 MINUTE)) BETWEEN -2 AND 1
+            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN -2 AND 1
         `;
 
         const [tasks5Min] = await pool.query(query5Min);
