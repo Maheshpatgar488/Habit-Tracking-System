@@ -92,8 +92,13 @@ router.get('/status', async (req, res) => {
                     icon: '/icon.png'
                 });
 
+                const options = {
+                    headers: { 'Urgency': 'high' },
+                    TTL: 1800 // 30 minutes
+                };
+
                 try {
-                    await webpush.sendNotification(pushSubscription, payload);
+                    await webpush.sendNotification(pushSubscription, payload, options);
                     notificationsSent++;
                 } catch (err) {
                     console.error('[STATUS CRON] Failed to send missed notification:', err.message);
@@ -171,8 +176,13 @@ router.get('/notify', async (req, res) => {
                     icon: '/icon.png'
                 });
 
+                const options = {
+                    headers: { 'Urgency': 'high' },
+                    TTL: 300 // 5 minutes
+                };
+
                 try {
-                    await webpush.sendNotification(pushSubscription, payload);
+                    await webpush.sendNotification(pushSubscription, payload, options);
                     sentIds.push(task.id);
                     sentCount++;
                 } catch (err) {
@@ -202,8 +212,13 @@ router.get('/notify', async (req, res) => {
                     icon: '/icon.png'
                 });
 
+                const options = {
+                    headers: { 'Urgency': 'high' },
+                    TTL: 900 // 15 minutes
+                };
+
                 try {
-                    await webpush.sendNotification(pushSubscription, payload);
+                    await webpush.sendNotification(pushSubscription, payload, options);
                     sentIds.push(task.id);
                     sentCount++;
                 } catch (err) {

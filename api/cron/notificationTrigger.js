@@ -64,8 +64,13 @@ cron.schedule('* * * * *', async () => {
                     icon: '/icon.png'
                 });
 
+                const options = {
+                    headers: { 'Urgency': 'high' },
+                    TTL: 300 // 5 minutes
+                };
+
                 try {
-                    await webpush.sendNotification(pushSubscription, payload);
+                    await webpush.sendNotification(pushSubscription, payload, options);
                     sentTaskIds.push(task.id);
                     console.log(`[CRON] 5-min reminder sent to user ${task.user_id} for task ${task.task_name}`);
                 } catch (err) {
@@ -100,8 +105,13 @@ cron.schedule('* * * * *', async () => {
                     icon: '/icon.png'
                 });
 
+                const options = {
+                    headers: { 'Urgency': 'high' },
+                    TTL: 900 // 15 minutes
+                };
+
                 try {
-                    await webpush.sendNotification(pushSubscription, payload);
+                    await webpush.sendNotification(pushSubscription, payload, options);
                     sentTaskIds.push(task.id);
                     console.log(`[CRON] Start notification sent to user ${task.user_id} for task ${task.task_name}`);
                 } catch (err) {
