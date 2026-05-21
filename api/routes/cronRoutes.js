@@ -198,7 +198,7 @@ router.get('/notify', async (req, res) => {
 
                 const payload = JSON.stringify({
                     title: 'Task Started 🚀',
-                    body: `Your task '${task.task_name}' has started — complete it on time!`,
+                    body: `Your task '${task.task_name}' has started - complete it on time!`,
                     icon: '/icon.png'
                 });
 

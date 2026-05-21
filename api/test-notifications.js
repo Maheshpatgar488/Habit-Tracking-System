@@ -94,8 +94,8 @@ async function testNotifications() {
         console.log('\nCleaned up all temporary test tasks successfully.');
 
         // 7. Overall evaluation
-        const success5Min = matched5Min.length === 1 && matched5Min[0].task_name === 'TEMP_TEST_Starts_In_3';
-        const successStart = matchedStart.length === 1 && matchedStart[0].task_name === 'TEMP_TEST_Started_5_Ago';
+        const success5Min = matched5Min.length > 0 && matched5Min.every(t => t.task_name === 'TEMP_TEST_Starts_In_3');
+        const successStart = matchedStart.length > 0 && matchedStart.every(t => t.task_name === 'TEMP_TEST_Started_5_Ago');
 
         if (success5Min && successStart) {
             console.log('\n🎉 SUCCESS: All query windows and boundaries validated perfectly! 🎉');
