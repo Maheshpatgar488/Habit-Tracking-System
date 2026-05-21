@@ -26,6 +26,27 @@ const verifyCron = (req, res, next) => {
 
 router.use(verifyCron);
 
+// Prevent Vercel and CDN caching for all cron endpoints
+router.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+});
+
+// Database logging helper for debugging cron execution
+const logCron = async (endpoint, message) => {
+    try {
+        await pool.query(
+            'INSERT INTO cron_execution_logs (endpoint, message) VALUES (?, ?)',
+            [endpoint, message]
+        );
+    } catch (err) {
+        console.error('[CRON LOG ERROR]', err.message);
+    }
+};
+
 // 1. Midnight Generator
 router.get('/midnight', async (req, res) => {
     console.log('[VERCEL CRON] Running Midnight Generator...');
@@ -54,9 +75,12 @@ router.get('/midnight', async (req, res) => {
                 [values]
             );
         }
-        res.status(200).json({ message: `Generated ${values.length} logs` });
+        const msg = `Generated ${values.length} logs`;
+        await logCron('/midnight', msg);
+        res.status(200).json({ message: msg });
     } catch (error) {
         console.error(error);
+        await logCron('/midnight', `Error: ${error.message}`);
         res.status(500).json({ error: error.message });
     }
 });
@@ -121,11 +145,12 @@ router.get('/status', async (req, res) => {
         `;
         const [result] = await pool.query(updateQuery);
 
-        res.status(200).json({ 
-            message: `Updated ${result.affectedRows} tasks to missed. Sent ${notificationsSent} notifications.` 
-        });
+        const msg = `Updated ${result.affectedRows} tasks to missed. Sent ${notificationsSent} notifications.`;
+        await logCron('/status', msg);
+        res.status(200).json({ message: msg });
     } catch (error) {
         console.error(error);
+        await logCron('/status', `Error: ${error.message}`);
         res.status(500).json({ error: error.message });
     }
 });
@@ -234,11 +259,12 @@ router.get('/notify', async (req, res) => {
             }
         }
 
-        res.status(200).json({ 
-            message: `Sent ${sentCount} notifications (5-min: ${tasks5Min.length}, start: ${tasksStart.length})` 
-        });
+        const msg = `Sent ${sentCount} notifications (5-min: ${tasks5Min.length}, start: ${tasksStart.length})`;
+        await logCron('/notify', msg);
+        res.status(200).json({ message: msg });
     } catch (error) {
         console.error(error);
+        await logCron('/notify', `Error: ${error.message}`);
         res.status(500).json({ error: error.message });
     }
 });
