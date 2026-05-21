@@ -1,6 +1,6 @@
+require('dotenv').config();
 const pool = require('./config/db');
 const webpush = require('web-push');
-require('dotenv').config();
 
 webpush.setVapidDetails(
     'mailto:test@test.com',
