@@ -117,15 +117,23 @@ const UserDashboard = () => {
             if (!document.hidden) fetchTimeline();
         }, 5000);
 
-        // Immediately re-fetch when user comes back to the tab or laptop wakes from sleep
-        const handleVisibilityChange = () => {
-            if (!document.hidden) fetchTimeline();
+        // Immediately re-fetch when user comes back to the tab, focuses the app, or app resumes from background
+        const handleSync = () => {
+            if (!document.hidden) {
+                fetchTimeline();
+                checkSubscription();
+            }
         };
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        document.addEventListener('visibilitychange', handleSync);
+        window.addEventListener('focus', handleSync);
+        window.addEventListener('pageshow', handleSync);
 
         return () => {
             clearInterval(interval);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('visibilitychange', handleSync);
+            window.removeEventListener('focus', handleSync);
+            window.removeEventListener('pageshow', handleSync);
         };
     }, []);
 
