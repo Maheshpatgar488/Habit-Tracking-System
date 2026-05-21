@@ -160,15 +160,6 @@ router.post('/subscribe', async (req, res) => {
         // Get timezoneOffset, default to -330 (IST) if not provided
         const tzOffset = timezoneOffset !== undefined ? parseInt(timezoneOffset) : -330;
 
-        // Remove ALL stale subscriptions for this user that have a DIFFERENT endpoint.
-        // This prevents duplicate notifications when the user has subscribed from
-        // multiple origins (e.g., localhost dev + live Vercel site) or after
-        // a browser restart that generates a new push endpoint.
-        await pool.query(
-            'DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint != ?',
-            [req.user.id, endpoint]
-        );
-
         // Upsert the current endpoint (insert if new, update timezone if already exists)
         const [existing] = await pool.query(
             'SELECT id FROM push_subscriptions WHERE user_id = ? AND endpoint = ?',
