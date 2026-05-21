@@ -105,6 +105,10 @@ const UserDashboard = () => {
         } catch (error) {
             console.error('Failed to fetch timeline', error);
             setLoading(false);
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
         }
     };
 
