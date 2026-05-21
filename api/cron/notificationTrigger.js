@@ -23,24 +23,24 @@ cron.schedule('* * * * *', async () => {
         // notif_5min_sent / notif_start_sent flags prevent duplicate sends when laptop wakes from sleep
         // and multiple cron cycles catch the same task window simultaneously.
 
-        // 5-min reminder: task starts in 1-5 minutes AND hasn't been notified yet
+        // 5-min reminder: task starts in 1-5 minutes (60-300 seconds) AND hasn't been notified yet
         const query5Min = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_5min_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 1 AND 5
+            AND TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN 60 AND 300
         `;
 
-        // Start notification: task started within last 15 minutes AND hasn't been notified yet
+        // Start notification: task started within last 15 minutes (0-900 seconds ago) AND hasn't been notified yet
         const queryStart = `
             SELECT d.id, d.user_id, d.task_name, d.scheduled_time, p.endpoint, p.p256dh, p.auth 
             FROM daily_task_logs d
             JOIN push_subscriptions p ON d.user_id = p.user_id
             WHERE d.status = 'pending'
             AND d.notif_start_sent = 0
-            AND TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN -15 AND 0
+            AND TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), DATE_ADD(d.scheduled_time, INTERVAL COALESCE(p.timezone_offset, -330) MINUTE)) BETWEEN -900 AND 0
         `;
 
         const [tasks5Min] = await pool.query(query5Min);
