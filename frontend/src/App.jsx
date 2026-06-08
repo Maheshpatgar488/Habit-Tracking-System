@@ -43,7 +43,7 @@ const Header = () => {
                         <Layers className="text-white" size={18} />
                     </div>
                     <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-purple-200">
-                        TaskFlow <span className="text-indigo-400 font-light text-base sm:text-xl">Pro</span>
+                        HabitTracker
                     </h1>
                 </div>
                 {hasToken && (
